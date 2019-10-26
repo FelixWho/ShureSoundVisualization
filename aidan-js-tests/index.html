@@ -8,16 +8,27 @@
 <div>hi</div>
 <script>
     navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
-        const context = new AudioContext();
-        const source = context.createMediaStreamSource(stream);
-        const processor = context.createScriptProcessor(1024, 1, 1);
 
-        source.connect(processor);
-        processor.connect(context.destination);
+       const context = new AudioContext();
+       const source = context.createMediaStreamSource(stream);
+       const analyzer = context.createAnalyser();
 
-       processor.onaudioprocess = function(e) {
-           console.log(e.inputBuffer);
+       analyzer.fftSize = 1024;
+
+
+       source.connect(analyzer);
+
+
+       function analyze() {
+           let buf = new Float32Array(analyzer.frequencyBinCount);
+
+           analyzer.getFloatFrequencyData(buf);
+
+           console.log(buf);
        }
+
+       setInterval(analyze, 100);
+
     });
 
 </script>
