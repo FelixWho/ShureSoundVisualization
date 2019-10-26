@@ -8,39 +8,40 @@
 <div>hi</div>
 <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script>
-    navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
+    navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(async (stream) => {
+
+
+
+
+
 
         const context = new AudioContext();
         const source = context.createMediaStreamSource(stream);
+
+        // server side
+        await context.audioWorklet.addModule("audio-streamer.js");
+
+        const streamerNode = new AudioWorkletNode(context, 'audio-streamer');
+
+        console.log(streamerNode.bufferSize);
+
+        function serverCallback(event) { // function that receives callback and updates DOM. NEEDS PROMISE??
+            //console.log(event.target.responseText);
+        }
+
+        source.connect(streamerNode);
+
+        // this line required for some stupid reason
+        streamerNode.connect(context.destination);
+
+
+        // client side analysis
         const analyzer = context.createAnalyser();
 
         analyzer.fftSize = 1024;
         analyzer.minDecibels = -100;
         analyzer.maxDecibels = -10;
         analyzer.smoothingTimeConstant = 0.50;
-
-        source.connect(analyzer);
-
-        const destination = context.createMediaStreamDestination();
-
-        analyzer.connect(destination);
-
-        const options = {
-            audioBitsPerSecond: 128000,
-            mimeType: 'audio/webm'
-        };
-
-        const mediaRecorder = new MediaRecorder(destination.stream, options);
-
-        console.log(mediaRecorder);
-
-        const timeslice = 1000;
-        mediaRecorder.start(timeslice);
-
-        mediaRecorder.ondataavailable = event => {
-            // felix: The binary data is somewhere in here. I can help with this.
-            console.log(event);
-        };
 
         function analyze() {
             let buf = new Float32Array(analyzer.frequencyBinCount);
