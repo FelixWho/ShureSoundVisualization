@@ -1,0 +1,67 @@
+<!--https://stackoverflow.com/questions/34820578/how-to-capture-audio-in-javascript-->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>capture microphone audio into buffer</title>
+    
+    <script type="text/javascript">
+    var recorder = new RecordAudio(userMedia);
+    function RecordAudio(stream, cfg) {
+
+var config = cfg || {};
+var bufferLen = config.bufferLen || 4096;
+var numChannels = config.numChannels || 2;
+this.context = stream.context;
+var recordBuffers = [];
+var recording = false;
+this.node = (this.context.createScriptProcessor ||
+  this.context.createJavaScriptNode).call(this.context,
+  bufferLen, numChannels, numChannels);
+
+stream.connect(this.node);
+this.node.connect(this.context.destination);
+
+this.node.onaudioprocess = function(e) {
+  if (!recording) return;
+  for (var i = 0; i < numChannels; i++) {
+    if (!recordBuffers[i]) recordBuffers[i] = [];
+    recordBuffers[i].push.apply(recordBuffers[i], e.inputBuffer.getChannelData(i));
+  }
+}
+
+this.getData = function() {
+  var tmp = recordBuffers;
+  recordBuffers = [];
+  return tmp; // returns an array of array containing data from various channels
+};
+
+this.start() = function() {
+  recording = true;
+};
+
+this.stop() = function() {
+  recording = false;
+};
+    }
+    
+    </script>
+    
+    </head>
+    <body>
+    
+        <p>Volume</p>
+        <input type ="submit" id="start" value = "start">
+        <input type ="submit" id="stop" value = "stop">
+    
+    </body>
+
+    <script>
+        document.getElementById("start").addEventListener("click", function(event){
+            recorder = new RecordAudio(userMedia);
+            recorder.start();
+        }, false);
+        document.getElementById("stop").addEventListener("click", function(event){
+            recorder.stop();
+        var recordedData = recorder.getData();
+            console.log(recordedData);
+        }, false);
+    </script>
+    </html>
