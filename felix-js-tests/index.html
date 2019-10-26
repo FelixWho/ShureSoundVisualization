@@ -45,16 +45,18 @@
             let binary = "1010"; // binary data held here
             
             const packet = {"data" : binary, "index" : index++};
+            console.log("packet: "+JSON.stringify(packet));
             const xmlHttp = new XMLHttpRequest();
             xmlHttp.open("POST", "http://35.193.212.185/api/stream/1", true);
             xmlHttp.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-            xmlHttp.send(JSON.stringify(binary));
+            xmlHttp.send(JSON.stringify(packet));
 
-            xmlHttp.onloadend = function () {
-                // completed send
-            };
-            
+            xmlHttp.addEventListener("load", callback, false);
         };
+
+        function callback(event){ // function that receives callback and updates DOM. NEEDS PROMISE??
+            console.log(event.target.responseText);
+        }
 
         function analyze() {
             let buf = new Float32Array(analyzer.frequencyBinCount);
@@ -96,8 +98,6 @@
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
-        scene.fog = new THREE.Fog(this.fogConfig.color, this.fogConfig.near, this.fogConfig.far);
-
         }
 
     function animate() {
