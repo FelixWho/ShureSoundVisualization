@@ -76,9 +76,6 @@
     let camera, scene, renderer;
     let geometry, material, mesh;
 
-    init();
-    animate();
-
     function init() {
 
         camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 10 );
@@ -109,8 +106,55 @@
 
         renderer.render( scene, camera );
 
+    }
+
+    function listener(event){ // user chose listener role
+        init();
+        animate();
+
+        let back = document.createElement("INPUT");
+        back.type = "submit"; back.value = "back";
+        back.addEventListener("click", function(event){
+            location.reload(false);
+        })
+        document.body.insertBefore(back, document.getElementById("listener"));
+
+        if(document.getElementById("listener")){
+            document.getElementById("listener").remove();
         }
+        if(document.getElementById("player")){
+            document.getElementById("player").remove();
+        }
+    }
+
+    function player(event){ // user chose player role
+
+        let back = document.createElement("INPUT");
+        back.type = "submit"; back.value = "back";
+        back.addEventListener("click", function(event){
+            location.reload(false);
+        })
+        document.body.insertBefore(back, document.getElementById("listener"));
+        
+        if(document.getElementById("listener")){
+            document.getElementById("listener").remove();
+        }
+        if(document.getElementById("player")){
+            document.getElementById("player").remove();
+        }
+        
+    }
 
 </script>
+
+<input type = "submit" id = "listener" value = "listener">
+<input type = "submit" id = "player" value = "player">
+
+<script>
+    /* EVENT LISTENERS */
+    document.getElementById("listener").addEventListener("click", listener, false);
+    document.getElementById("player").addEventListener("click", listener, false);
+</script>
+
 </body>
 </html>
