@@ -10,14 +10,23 @@
     navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
        const context = new AudioContext();
        const source = context.createMediaStreamSource(stream);
-       const processor = context.createScriptProcessor(1024, 1, 1);
+       const analyzer = context.createAnalyser();
 
-       source.connect(processor);
-       processor.connect(context.destination);
+       analyzer.fftSize = 1024;
 
-       processor.onaudioprocess = function(e) {
-           console.log(e.inputBuffer);
+       source.connect(analyzer);
+
+
+       function analyze() {
+           let buf = new Float32Array(analyzer.frequencyBinCount);
+
+           analyzer.getFloatFrequencyData(buf);
+
+           console.log(buf);
        }
+
+       setInterval(analyze, 100);
+
     });
 
 </script>
