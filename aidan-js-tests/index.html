@@ -6,28 +6,54 @@
 </head>
 <body>
 <div>hi</div>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script>
     navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
 
-       const context = new AudioContext();
-       const source = context.createMediaStreamSource(stream);
-       const analyzer = context.createAnalyser();
+        const context = new AudioContext();
+        const source = context.createMediaStreamSource(stream);
+        const analyzer = context.createAnalyser();
 
-       analyzer.fftSize = 1024;
+        analyzer.fftSize = 1024;
+        analyzer.minDecibels = -100;
+        analyzer.maxDecibels = -10;
+        analyzer.smoothingTimeConstant = 0.50;
 
+        source.connect(analyzer);
 
-       source.connect(analyzer);
+        const destination = context.createMediaStreamDestination();
 
+        analyzer.connect(destination);
 
-       function analyze() {
-           let buf = new Float32Array(analyzer.frequencyBinCount);
+        const options = {
+            audioBitsPerSecond: 128000,
+            mimeType: 'audio/webm'
+        };
 
-           analyzer.getFloatFrequencyData(buf);
+        const mediaRecorder = new MediaRecorder(destination.stream, options);
 
-           console.log(buf);
-       }
+        console.log(mediaRecorder);
 
-       setInterval(analyze, 100);
+        const timeslice = 1000;
+        mediaRecorder.start(timeslice);
+
+        mediaRecorder.ondataavailable = event => {
+            // felix: The binary data is somewhere in here. I can help with this.
+            console.log(event);
+        };
+
+        function analyze() {
+            let buf = new Float32Array(analyzer.frequencyBinCount);
+
+            analyzer.getFloatFrequencyData(buf);
+
+            const minFreq = 0;
+            const maxFreq = context.sampleRate / 2;
+
+            //console.log(buf);
+        }
+
+        setInterval(analyze, 100);
 
     });
 
