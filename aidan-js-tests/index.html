@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>test</title>
+</head>
+<body>
+<div>hi</div>
+<script>
+    navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
+       const context = new AudioContext();
+       const source = context.createMediaStreamSource(stream);
+       const processor = context.createScriptProcessor(1024, 1, 1);
+
+       source.connect(processor);
+       processor.connect(context.destination);
+
+       processor.onaudioprocess = function(e) {
+           console.log(e.inputBuffer);
+       }
+    });
+
+</script>
+</body>
+</html>
