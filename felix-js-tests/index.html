@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Waveform</title>
+</head>
+<body>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="../three.min.js"></script>
+<script src="../jquery-3.4.1.min.js"></script>
+<script>
+    navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
+
+        const context = new AudioContext();
+        const source = context.createMediaStreamSource(stream);
+        const analyzer = context.createAnalyser();
+
+        analyzer.fftSize = 1024;
+        analyzer.minDecibels = -100;
+        analyzer.maxDecibels = -10;
+        analyzer.smoothingTimeConstant = 0.50;
+
+        source.connect(analyzer);
+
+        const destination = context.createMediaStreamDestination();
+
+        analyzer.connect(destination);
+
+        const options = {
+            audioBitsPerSecond: 128000,
+            mimeType: 'audio/webm'
+        };
+
+        const mediaRecorder = new MediaRecorder(destination.stream, options);
+
+        console.log(mediaRecorder);
+
+        const timeslice = 1000;
+        mediaRecorder.start(timeslice);
+
+        let index = 0;
+        mediaRecorder.ondataavailable = event => {
+            // felix: The binary data is somewhere in here. I can help with this.
+            //console.log(event);
+            let binary = "1010"; // binary data held here
+            
+            const packet = {"data" : binary, "index" : index++};
+            const xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("POST", "http://35.193.212.185/api/stream/1", true);
+            xmlHttp.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            xmlHttp.send(JSON.stringify(binary));
+
+            xmlHttp.onloadend = function () {
+                // completed send
+            };
+            
+        };
+
+        function analyze() {
+            let buf = new Float32Array(analyzer.frequencyBinCount);
+
+            analyzer.getFloatFrequencyData(buf);
+
+            const minFreq = 0;
+            const maxFreq = context.sampleRate / 2;
+
+            //console.log(buf);
+        }
+
+        setInterval(analyze, 100);
+        
+    });
+
+    let camera, scene, renderer;
+    let geometry, material, mesh;
+
+    init();
+    animate();
+
+    function init() {
+
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 10 );
+        camera.position.z = 1;
+
+        scene = new THREE.Scene();
+
+        geometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
+        material = new THREE.MeshNormalMaterial();
+
+        mesh = new THREE.Mesh( geometry, material );
+        scene.add( mesh );
+
+        renderer = new THREE.WebGLRenderer( {antialias: true, alias: true} );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+        scene.fog = new THREE.Fog(this.fogConfig.color, this.fogConfig.near, this.fogConfig.far);
+
+        }
+
+    function animate() {
+
+        requestAnimationFrame( animate );
+
+        mesh.rotation.x += 0.01;
+        mesh.rotation.y += 0.02;
+
+        renderer.render( scene, camera );
+
+        }
+
+</script>
+</body>
+</html>
