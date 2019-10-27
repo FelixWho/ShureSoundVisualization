@@ -22,6 +22,8 @@ function startListening() {
 
         var downsample = 4;
 
+        var graphCubesCount = 33;
+
         function urlInit() {
             const req = new XMLHttpRequest();
             req.open("POST", "http://35.193.212.185/api/init", true);
@@ -34,7 +36,7 @@ function startListening() {
         function urlCallback(event) {
 
             let data = JSON.parse(event.target.responseText);
-            console.log(data);
+            // console.log(data);
             //console.log("success", data.success);
 
             postUrl = data.url;
@@ -60,10 +62,26 @@ function startListening() {
         function serverCallback(event) {
             let data = JSON.parse(event.target.responseText);
 
-            console.log(data);
+            // console.log(data);
 
-            timNoise = Math.round(Math.max(1*data.noise, 20));
-            ifft = data.ifft;
+            timNoise = Math.round(Math.min(5*data.noise, 20));
+
+            if (!ifft || ifftIndex >= ifft.length/4) {
+                ifft = data.ifft;
+                console.log("change ifft");
+                ifftIndex = 0;
+            }
+
+
+
+
+
+            if(graphCubes.length !== graphCubesCount) {
+                renderGraphCubes();
+            }
+
+
+            console.log(timNoise);
 
             // console.log(timNoise);
 
@@ -156,10 +174,6 @@ function startListening() {
         mesh2.position.set(0,0,0);
         mesh3.position.set(0.7,0,0);
 
-        // for(let i = 0; i < 16; i++) {
-        //
-        // }
-
         renderer = new THREE.WebGLRenderer( {antialias: true, alias: true} );
         renderer.setSize( window.innerWidth, window.innerHeight );
 
@@ -168,6 +182,56 @@ function startListening() {
         renderer.setClearColor (0xdfe6e9, 1);
         document.body.appendChild(renderer.domElement);
 
+    }
+
+    function renderGraphCubes() {
+        for (let i = 0; i < graphCubesCount; i++) {
+
+            let material = new THREE.MeshNormalMaterial();
+
+            let geo = new THREE.CubeGeometry(0.05, 0.05, 0.05);
+
+            graphCubes.push(new THREE.Mesh(geo, material));
+
+            scene.add(graphCubes[i]);
+
+            graphCubes[i].position.set(i / 8 - 1 + 1 / 16, 0, -1);
+        }
+    }
+
+    var ifftIndex = 0;
+
+    function updateIfft() {
+        if (graphCubes.length === graphCubesCount) {
+            // console.log("update");
+
+            for (let i = 0; i < graphCubesCount; i++) {
+
+                let y = 0.0;
+
+                if (ifft && ifftIndex + i < ifft.length) {
+                    y = 2 * ifft[ifftIndex + i];
+                }
+
+                graphCubes[i].position.set(i / 8 - 2, y, -1);
+                // graphCubes[i].position.needsUpdate = true;
+
+                if (i % 2 === 0) {
+                    graphCubes[i].rotation.x -= 0.005;
+                }
+                else {
+                    graphCubes[i].rotation.x += 0.005;
+                }
+
+                if (i % 4 === 0 || i % 4 === 1) {
+                    graphCubes[i].rotation.y -= 0.005;
+                }
+                else {
+                    graphCubes[i].rotation.y += 0.005;
+                }
+            }
+        }
+        ifftIndex++;
     }
 
     init();
@@ -227,6 +291,8 @@ function startListening() {
     }
 
     function animate() {
+
+        updateIfft();
     
         let a = arr[0], b = arr[1], c = arr[2], d = arr[3];
         if(d < c){d = c;}
