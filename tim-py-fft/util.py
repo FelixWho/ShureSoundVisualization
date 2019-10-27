@@ -9,37 +9,42 @@ class util():
 	@param: x The discrete magnitude function over time;
 	@param: plot Whether or not to show the plot of the ttf.
 	
-	@return: A The function of magnitude (in terms of exponents of e) for each frequency;
+	@return: A The function of magnitude for each frequency;
 	@return: freq The reference of frequency relating to A.
 	'''
 
 	@staticmethod
-	def FFT(rate, x, plot=False):
+	def FFT(rate, x, display=False):
 		l_x = len(x)
 		t = np.linspace(0,l_x/rate,l_x)
 
-		if plot:
+		if display:
 			fig, ax = plt.subplots()
 
 			ax.plot(t, x)
+
+			ax.set_title("Signal Amplitude over Time")
 			ax.set_xlabel("Time [s]")
 			ax.set_ylabel("Signal amplitude")
 
 		A = fftpack.fft(x)
 		freq = fftpack.fftfreq(l_x) * rate
 
-		if plot:
+		if display:
 
 			fig, ax = plt.subplots()
 
 			ax.stem(freq, np.abs(A), use_line_collection=True)
+
+			ax.set_title("Amplitude of Sine Functions of Different Frequencies")
 			ax.set_xlabel('Frequency in Hertz [Hz]')
 			ax.set_ylabel('Frequency Domain (Spectrum) Magnitude')
+
 			ax.set_xlim(0, 20000)
 
 			plt.show()
 
-		return A, freq
+		return abs(A), freq
 
 	'''
 	@param: rate The sampling rate of the input audio;
@@ -63,7 +68,7 @@ class util():
 
 		if display:
 			fig, ax = plt.subplots()
-			ax.plot(t, x)
+			ax.plot(t, x, "b")
 
 			peak_tmp = []
 			for i in range(0,l_x):
@@ -71,7 +76,13 @@ class util():
 					peak_tmp.append(x[i])
 				else: 
 					peak_tmp.append(0)
-			ax.stem(t, peak_tmp)
+
+			ax.stem(t, peak_tmp, "g")
+			
+			ax.set_title("Peaks of the Sound Wave")
+			ax.set_xlabel('Time [s]')
+			ax.set_ylabel('Signal amplitude')
+
 			plt.show()
 
 		return peak
@@ -83,12 +94,13 @@ class util():
 
 	@return: peak The list of position of peaks.
 	'''
-	def findSteepEdge(rate, x, display=False): 
+	@staticmethod
+	def findSteepRaisingEdge(rate, x, display=False): 
 		# note because of the property of the wave form, it is actually hard to use the Z-Score test to find major peaks
 		# instead, it is a good way yo find major raises (the steep raising edges)
 
 		l_window = 25
-		thd = 3.5
+		thd = 2.5
 
 		s1 = 0
 		s2 = 0
@@ -122,29 +134,33 @@ class util():
 			ss2.append(s2/l_window - thd * sigma)
 
 		if display:
-			print(len(peak))
-			print(peak)
+			# print(len(peak))
+			# print(peak)
 
-		rate = 44100
-		t = np.linspace(0,l_x/rate,l_x)
+			t = np.linspace(0,l_x/rate,l_x)
 
-		fig, ax = plt.subplots()
-		ax.plot(t, x)
+			fig, ax = plt.subplots()
+			ax.plot(t, x, 'b')
 
-		peak_tmp = []
-		for i in range(0,l_x):
-			if i in peak: 
-				peak_tmp.append(x[i])
-			else: 
-				peak_tmp.append(0)
-		ax.stem(t, np.array(peak_tmp))
+			peak_tmp = []
+			for i in range(0,l_x):
+				if i in peak: 
+					peak_tmp.append(x[i])
+				else: 
+					peak_tmp.append(0)
 
-		ax.plot(t,ss1)
-		# ax.plot(t,ss2)
-		# ax.plot(t,sig)
-		# ax.plot(t,sss)
+			ax.stem(t, np.array(peak_tmp), 'g')
 
-		plt.show()
+			# ax.plot(t,ss1)
+			# ax.plot(t,ss2)
+			# ax.plot(t,sig)
+			# ax.plot(t,sss)
+		
+			ax.set_title("Steep Raising Edges of the Sound Wave")
+			ax.set_xlabel('Time [s]')
+			ax.set_ylabel('Signal amplitude')
+
+			plt.show()
 
 		return peak
 
@@ -181,6 +197,11 @@ class util():
 			t = np.linspace(0,l_x/rate,l_x)
 			fig, ax = plt.subplots()
 			ax.plot(t,y)
+
+			ax.set_title("Smoothed Curve of the Sound Wave (Neighbourhood Average)")
+			ax.set_xlabel('Time [s]')
+			ax.set_ylabel('Signal amplitude')
+
 			plt.show()
 
 		return y
@@ -217,30 +238,61 @@ class util():
 			t = np.linspace(0,l_x/rate,l_x)
 			fig, ax = plt.subplots()
 			ax.plot(t,y)
+			
+			ax.set_title("Smoothed Curve of the Sound Wave (FFT and Inversed FFT)")
+			ax.set_xlabel('Time [s]')
+			ax.set_ylabel('Signal amplitude')
+
 			plt.show()
 
 		return y
 
 
 	'''
-	@param: x The sequence that is being accessed
-	@param: level The level of smooth when accessing
+	@param: x The sequence that is being assessed
+	@param: level The level of smooth when assessing
 
 	@return: dev The total deviation of the sound sequence
 	'''
 	@staticmethod
-	def smoothnessAccess(x, level):
+	def smoothnessAssessAverage(rate, x, level):
 		max_x = 0
 		for i in x:
 			if i > max_x: max_x = i
 
 		y = util.smoothAverage(x,level)
+
 		dev = 0
+		tot = 0
 		l_x = len(x)
 		for i in range(0,l_x):
-			dev += abs(x[i]-y[i])/max_x
+			dev += (x[i]-y[i])**2
+			tot += x[i] ** 2
 
-		return dev/l_x
+		return dev/tot
+
+	'''
+	@param: x The sequence that is being assessed
+	@param: level The level of smooth when assessing
+
+	@return: dev The total deviation of the sound sequence
+	'''
+	@staticmethod
+	def smoothnessAssessIFFT(rate, x, level):
+		max_x = 0
+		for i in x:
+			if i > max_x: max_x = i
+
+		y = util.smoothIFFT(x,level)
+
+		dev = 0
+		tot = 0
+		l_x = len(x)
+		for i in range(0,l_x):
+			dev += (x[i]-y[i])**2
+			tot += x[i]**2
+
+		return dev/tot
 
 	'''
 	@param: rate The sampling rate of the input audio;
@@ -252,7 +304,7 @@ class util():
 	@return: the function of deviation between det and src over time (relative to the starting position pos).
 	'''
 	@staticmethod
-	def match(rate, src, det, display=False, peakProne=False):
+	def match(rate, src, det, peakPrune=False, display=False):
 		peak_src = util.findPeak(rate, src, display=False)
 		peak_det = util.findPeak(rate, det, display=False)
 
@@ -282,7 +334,7 @@ class util():
 			if peak_src[i] - peak_det[0] + l_det > l_src: break;
 
 			# # matching the peaks
-			if peakProne:
+			if peakPrune:
 				mth = True
 				for j in range(1,lp_det):
 					if abs(abs(peak_src[i+j]-peak_src[i])-abs(peak_det[j]-peak_det[0])) > EPSILON:
@@ -330,11 +382,22 @@ class util():
 
 			fig, ax = plt.subplots()
 			ax.plot(t, dev)
+
+			ax.set_title("The Deviation Curve of the Best Match of the Curve")
+			ax.set_xlabel('Time [s]')
+			ax.set_ylabel('Signal amplitude Difference')
+
 			plt.show()
 
 			fig, ax = plt.subplots()
-			ax.plot(t, det / max_det, "r")
+			ax.plot(t, det / max_det, "b")
 			ax.plot(t, src[min_pos:min_pos+l_det] / max_src, "g")
+
+
+			ax.set_title("Best Match of the Curve on Original Sound Track")
+			ax.set_xlabel('Time [s]')
+			ax.set_ylabel('Signal amplitude')
+
 			plt.show()
 
 		return min_pos, min_dev, dev
