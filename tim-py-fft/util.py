@@ -9,12 +9,12 @@ class util():
 	@param: x The discrete magnitude function over time;
 	@param: plot Whether or not to show the plot of the ttf.
 	
-	@return: A The function of magnitude for each frequency;
+	@return: A The function of magnitude (in terms of exponents of e) for each frequency;
 	@return: freq The reference of frequency relating to A.
 	'''
 
 	@staticmethod
-	def ttf(rate, x, plot=False):
+	def FFT(rate, x, plot=False):
 		l_x = len(x)
 		t = np.linspace(0,l_x/rate,l_x)
 
@@ -39,7 +39,7 @@ class util():
 
 			plt.show()
 
-		return np.abs(A), freq
+		return A, freq
 
 	'''
 	@param: rate The sampling rate of the input audio;
@@ -83,7 +83,10 @@ class util():
 
 	@return: peak The list of position of peaks.
 	'''
-	def findPeakZScore(rate, x, display=False): 
+	def findSteepEdge(rate, x, display=False): 
+		# note because of the property of the wave form, it is actually hard to use the Z-Score test to find major peaks
+		# instead, it is a good way yo find major raises (the steep raising edges)
+
 		l_window = 25
 		thd = 3.5
 
@@ -146,18 +149,20 @@ class util():
 		return peak
 
 	'''
+	@param rate The sampling rate of the audio
 	@param x The sequence that is being smoothed
 	@param level The number of nodes in the neighbourhood that is used to smooth the data
+	@param display Whether or not to display the smoothed curve
 
 	@return y The smoothed data of x
 	'''
 	@staticmethod
-	def smoothAverage(x, level):
+	def smoothAverage(rate, x, level, display=False):
 		l_x = len(x)
 		y = [0] * l_x
 
 		tmp = 0
-		r = int(level/2)
+		r = level//2
 		for i in range(0,level):
 			tmp += x[i]
 
@@ -171,7 +176,51 @@ class util():
 		for i in range(l_x-r,l_x):
 			y[i] = tmp/level
 
+
+		if display: 
+			t = np.linspace(0,l_x/rate,l_x)
+			fig, ax = plt.subplots()
+			ax.plot(t,y)
+			plt.show()
+
 		return y
+
+	'''
+	@param rate The sampling rate of the audio
+	@param x The sequence that is being smoothed
+	@param level The number of frequencies that wanted to preserve
+	@param display Whether or not to display the smoothed curve
+	
+	@return y The smoothed data of x
+	'''
+	@staticmethod
+	def smoothIFFT(rate, x, level, display=False):
+		l_x = len(x)
+
+		# A, freq = util.FFT(x)
+		# A, freq = sorted([(A[i],freq[i]) for i in range(len(A))], key=lambda x: x[i], reverse=True)[0:len(A)//100*level]
+		
+		A = np.fft.fft(x)
+		tmp = abs(sorted(A, key=lambda x: abs(x), reverse=True)[level])
+		
+		B = []
+
+		for i in A:
+			if abs(i)<abs(tmp):
+				B.append(0)
+			else:
+				B.append(i)
+
+		y = np.fft.ifft(B)
+
+		if display: 
+			t = np.linspace(0,l_x/rate,l_x)
+			fig, ax = plt.subplots()
+			ax.plot(t,y)
+			plt.show()
+
+		return y
+
 
 	'''
 	@param: x The sequence that is being accessed
@@ -180,7 +229,7 @@ class util():
 	@return: dev The total deviation of the sound sequence
 	'''
 	@staticmethod
-	def smoothness(x, level):
+	def smoothnessAccess(x, level):
 		max_x = 0
 		for i in x:
 			if i > max_x: max_x = i
