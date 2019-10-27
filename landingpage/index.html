@@ -17,8 +17,7 @@
 
 		<!-- Banner -->
 			<section id="banner">
-				<h2><strong>Tim</strong> is a solution to visualize audio and measure audio quality</h2>
-				
+				<h2><strong>Tim</strong> is a proof of concept of audio visualization and audio quality testing</h2>
 			</section>
 
 		<!-- One -->
@@ -31,7 +30,7 @@
 				</div>
 				<div class="inner">
 					<header class="major">
-						<h2>Techologies We Use</h2>
+						<h2>Stuff We Did</h2>
 					</header>
 
 					<!-- upload your images to images/ and change the src ref -->
@@ -45,27 +44,27 @@
 						<div class="feature">
 							<span class="image fit"><img src="images/pic-fft.png" alt="" /></span>
 							<h3>Audio Quality Measurement</h3>
-							<p>Using Python, we compare discrete fourier transform outputs of idealized and realized sound clips.</p>
+							<p>Using Python and novel algorithms, we compare discrete fourier transform outputs of idealized and realized sound clips.</p>
 						</div>
 						<div class="feature">
-							<span class="image fit"><img src="images/pic01.jpg" alt="" /></span>
+							<span class="image fit"><img src="images/gcp.png" alt="" /></span>
 							<h3>GCP</h3>
 							<p>We use GCP to create an Apache server with flask backend and our own API endpoints in order to stream audio.</p>
 						</div>
 						<div class="feature">
-							<span class="image fit"><img src="images/pic01.jpg" alt="" /></span>
+							<span class="image fit"><img src="images/IMG_3150.jpg" alt="" /></span>
 							<h3>Lots of Math</h3>
 							<p>For example, we balance our audio input by frequency variance and median to ensure our visualization looks consistent.</p>
 						</div>
 						<div class="feature">
-							<span class="image fit"><img src="images/pic01.jpg" alt="" /></span>
-							<h3>Coca-Cola Products</h3>
-							<p>Yes</p>
+							<span class="image fit"><img src="images/maths.jpg" alt="" /></span>
+							<h3>Gratitude</h3>
+							<p>We want to thank everyone who was part of the hackathon for making an impact.</p>
 						</div>
 					</div>
 				</div>
-				<ul class="actions">
-						<li><a href="#" class="button special">Get started</a></li>
+				<ul>
+						<li><a href="../felix-js-tests/index.html" class="button special" id = "start">Get started</a></li>
 				</ul>
 			</section>
 
@@ -512,7 +511,13 @@ print 'It took ' + i + ' iterations to sort the deck.';
 				</div>
 			</footer>
 
+
 		<!-- Scripts -->
+		<script>
+			document.getElementById("start").addEventListener("click", function(event){
+				window.location("../felix-js-tests/index.html");
+			},false);
+		</script>
 		<!--
 			<script src="assets/js/jquery.min.js"></script>
 			<script src="assets/js/skel.min.js"></script>
