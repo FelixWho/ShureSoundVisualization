@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Waveform</title>
 </head>
-<body>
+<body style="margin:0;">
 <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="../three.min.js"></script>
 <script src="../jquery-3.4.1.min.js"></script>
@@ -15,7 +15,7 @@ function startListening() {
         const source = context.createMediaStreamSource(stream);
 
         // server side
-        var sessionID = "" + Date.now();
+        var sessionID = "" + 7;
         var postUrl = "";
 
         function urlInit() {
@@ -58,15 +58,14 @@ function startListening() {
             let dataString = "[" + data.join(",") + "]";
 
             const packet = {"data" : dataString, "index" : index++};
-            //console.log("packet: "+JSON.stringify(packet));
-            /*
+            console.log("packet: "+JSON.stringify(packet));
+
             const xmlHttp = new XMLHttpRequest();
             xmlHttp.open("POST", "http://35.193.212.185" + postUrl, true);
             xmlHttp.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
             xmlHttp.send(JSON.stringify(packet));
 
             xmlHttp.addEventListener("load", callback, false);
-            */
         };
 
         function callback(d) {
@@ -137,7 +136,7 @@ function startListening() {
         for(let i = 1; i < buf.length-36; i++){
             sum[i] = buf[i]+sum[i-1];
             sum_sq[i] = Math.pow(buf[i], 2)+sum_sq[i-1];
-            if(i == buf.length-1){
+            if(i === buf.length-1){
                 currAvgDB = 1.0*sum[buf.length-1]/buf.length;
             }
         }
@@ -273,20 +272,34 @@ function startListening() {
         let buf = new Float32Array(analyzer.frequencyBinCount);
         analyzer.getFloatFrequencyData(buf);
         let sum = 0.0;
-
-        for(let i = 0; i < 100; i++){
+        for(let i = 0; i < 80; i++){
             sum+=buf[i];
         }
-        let avg = sum/100.0;
+        let avg = sum/80.0;
+
+        const timNoise = 1;
+
 
         if(avg > prevAvg && (avg-prevAvg)/Math.abs(prevAvg) > 0.25){
             console.log("change color");
             let newColor = colors[getRandomInt(8)];
-            while(newColor == currentColor) {
+            while(newColor === currentColor) {
                 newColor = colors[getRandomInt(8)];
             }
             renderer.setClearColor (newColor, 1);
             currentColor = newColor;
+        }
+        else if (timNoise > 0) {
+            let distortNoise = Math.round(1 - 2*Math.random() * timNoise);
+            let newColor = 0;
+            for(let i = 0; i < 4; i++) {
+                let component = currentColor >> (i * 8) & 0xff;
+
+                let newComponent = Math.max(Math.min(component + distortNoise, 255), 0);
+                newColor += newComponent << (i * 8);
+            }
+
+            renderer.setClearColor(newColor, 1);
         }
         prevAvg = avg;
         
@@ -313,7 +326,7 @@ function startListening() {
         back.type = "submit"; back.value = "back";
         back.addEventListener("click", function(event){
             location.reload(false);
-        })
+        });
         document.body.insertBefore(back, document.getElementById("listener"));
 
         if(document.getElementById("listener")){
@@ -332,7 +345,7 @@ function startListening() {
         back.type = "submit"; back.value = "back";
         back.addEventListener("click", function(event){
             location.reload(false);
-        })
+        });
         document.body.insertBefore(back, document.getElementById("listener"));
         
         if(document.getElementById("listener")){
@@ -345,7 +358,6 @@ function startListening() {
     }
 
 </script>
-
 <input type = "submit" id = "listener" value = "listener">
 <input type = "submit" id = "player" value = "player">
 
