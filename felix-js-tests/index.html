@@ -9,16 +9,17 @@
 <script src="../three.min.js"></script>
 <script src="../jquery-3.4.1.min.js"></script>
 <script>
+function startListening(){
     navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
-
+        
         const context = new AudioContext();
         const source = context.createMediaStreamSource(stream);
         const analyzer = context.createAnalyser();
 
-        analyzer.fftSize = 1024;
+        analyzer.fftSize = 512;
         analyzer.minDecibels = -100;
         analyzer.maxDecibels = -10;
-        analyzer.smoothingTimeConstant = 0.50;
+        analyzer.smoothingTimeConstant = 0.60;
 
         source.connect(analyzer);
 
@@ -58,36 +59,34 @@
             //console.log(event.target.responseText);
         }
 
-        function analyze() {
-            let buf = new Float32Array(analyzer.frequencyBinCount);
 
-            analyzer.getFloatFrequencyData(buf);
-
-            const minFreq = 0;
-            const maxFreq = context.sampleRate / 2;
-
-            //console.log(buf);
-        }
-
-        setInterval(analyze, 100);
-        
-    });
-
+    let isListener = false;
     let camera, scene, renderer;
     let geometry, material, mesh;
 
     function init() {
 
         camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 10 );
-        camera.position.z = 1;
+        camera.position.z = 3;
 
         scene = new THREE.Scene();
-
-        geometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
         material = new THREE.MeshNormalMaterial();
 
-        mesh = new THREE.Mesh( geometry, material );
-        scene.add( mesh );
+        geometry1 = new THREE.CubeGeometry( 0.1, 0.1, 0.1 );
+        geometry2 = new THREE.CubeGeometry( 0.1, 0.1, 0.1 );
+        geometry3 = new THREE.CubeGeometry( 0.1, 0.1, 0.1 );
+
+        mesh1 = new THREE.Mesh( geometry1, material );
+        mesh2 = new THREE.Mesh( geometry2, material );
+        mesh3 = new THREE.Mesh( geometry3, material );
+
+        scene.add( mesh1 );
+        scene.add( mesh2 );
+        scene.add( mesh3 );
+
+        mesh1.position.set(-1, 0, 0);
+        mesh2.position.set(0,0,0);
+        mesh3.position.set(1,0,0);
 
         renderer = new THREE.WebGLRenderer( {antialias: true, alias: true} );
         renderer.setSize( window.innerWidth, window.innerHeight );
@@ -95,22 +94,81 @@
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
-        }
+    }
+
+    init();
 
     function animate() {
+    
+        let a = arr[0], b = arr[1], c = arr[2], d = arr[3];
+        let buf = new Float32Array(analyzer.frequencyBinCount);
+        analyzer.getFloatFrequencyData(buf);
+
+        const minFreq = 0;
+        const maxFreq = context.sampleRate / 2;
+
+        let sum1 = 0.0, sum2 = 0.0, sum3 = 0.0;
+        for(let i = a; i < Math.min(buf.length, b); i++){
+            sum1+=buf[i];
+        }
+        for(let i = b; i < Math.min(buf.length, c); i++){
+            sum2+=buf[i];
+        }
+        for(let i = c; i < Math.min(buf.length, d); i++){
+            sum3+=buf[i];
+        }
+
+        let avg1 = sum1 / ((Math.min(buf.length, b)-a)*1.0);
+        let avg2 = sum2 / ((Math.min(buf.length, c)-b)*1.0);
+        let avg3 = sum3 / ((Math.min(buf.length, d)-c)*1.0);
+        //console.log(avg3);
+        //console.log(avg);
+
+        // setInterval(analyze, 50);
 
         requestAnimationFrame( animate );
 
-        mesh.rotation.x += 0.01;
-        mesh.rotation.y += 0.02;
+        mesh1.rotation.x += 0.005;
+        mesh1.rotation.y += 0.005;
+        mesh2.rotation.x -= 0.005;
+        mesh2.rotation.y += 0.005;
+        mesh3.rotation.x -= 0.005;
+        mesh3.rotation.y -= 0.005;
+
+        approx_min = -160;
+        approx_max = -70;
+
+        scaleish1 = 1.0*(avg1 - approx_min)/(approx_max - approx_min);
+        scaleish2 = 1.0*(avg2 - approx_min)/(approx_max - approx_min);
+        scaleish3 = 1.0*(avg3 - approx_min)/(approx_max - approx_min);
+
+        scale1 = 1 + 4*Math.max(Math.min(scaleish1, 1), 0);
+        scale2 = 1 + 4*Math.max(Math.min(scaleish2, 1), 0);
+        scale3 = 1 + 4*Math.max(Math.min(scaleish3, 1), 0);
+
+        mesh1.scale.x = scale1;
+        mesh1.scale.y = scale1;
+        mesh1.scale.z = scale1;
+        mesh2.scale.x = scale2;
+        mesh2.scale.y = scale2;
+        mesh2.scale.z = scale2;
+        mesh3.scale.x = scale3;
+        mesh3.scale.y = scale3;
+        mesh3.scale.z = scale3;
 
         renderer.render( scene, camera );
 
     }
 
+    let arr =  [14,26, 40,60];
+    animate();
+        
+    });
+}
+
     function listener(event){ // user chose listener role
-        init();
-        animate();
+        isListener = true;
+        startListening();
 
         let back = document.createElement("INPUT");
         back.type = "submit"; back.value = "back";
@@ -128,6 +186,8 @@
     }
 
     function player(event){ // user chose player role
+
+        isListener = false;
 
         let back = document.createElement("INPUT");
         back.type = "submit"; back.value = "back";
@@ -153,7 +213,7 @@
 <script>
     /* EVENT LISTENERS */
     document.getElementById("listener").addEventListener("click", listener, false);
-    document.getElementById("player").addEventListener("click", listener, false);
+    document.getElementById("player").addEventListener("click", player, false);
 </script>
 
 </body>
