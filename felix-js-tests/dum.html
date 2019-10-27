@@ -85,10 +85,10 @@ function startListening() {
 
         const analyzer = context.createAnalyser();
 
-        analyzer.fftSize = 2048;
+        analyzer.fftSize = 512;
         // analyzer.minDecibels = -100;
         // analyzer.maxDecibels = -10;
-        analyzer.smoothingTimeConstant = 0.8;
+        analyzer.smoothingTimeConstant = 0.6;
 
         source.connect(analyzer);
         analyzer.connect(fakeDestination);
@@ -183,16 +183,16 @@ function startListening() {
 
         let runningVariance = 0;
 
-        bins = [0];
+        bins = [0, 100, 180, 255];
 
-        for(let i = 0; i < analyzer.frequencyBinCount; i++) {
-            runningVariance += variance[i];
-
-            if(runningVariance >= totalVariance/BINS || i === analyzer.frequencyBinCount - 1) {
-                bins.push(i);
-                runningVariance -= totalVariance/BINS;
-            }
-        }
+        // for(let i = 0; i < analyzer.frequencyBinCount; i++) {
+        //     runningVariance += variance[i];
+        //
+        //     if(runningVariance >= totalVariance/BINS || i === analyzer.frequencyBinCount - 1) {
+        //         bins.push(i);
+        //         runningVariance -= totalVariance/BINS;
+        //     }
+        // }
 
 
         arr = bins;
@@ -216,7 +216,7 @@ function startListening() {
             theVal /= width;
 
 
-            let zscore = (theVal + 100)/90;
+            let zscore = (median(buf.slice(bins[i], bins[i+1])) + 100)/90;
 
             console.log(zscore);
 
@@ -306,6 +306,10 @@ function startListening() {
             return lastElement;
         }
 
+    }
+
+    function median(array) {
+        return array.sort()[Math.floor(array.length/2)];
     }
 
 </script>
