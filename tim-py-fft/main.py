@@ -30,6 +30,6 @@ l_seq = len(data_seq)
 # matching for the smallest total deviation
 
 # manually make some noice
-# data_seq = data_seq + 1 * np.random.randn(l_seq)
+data_seq = data_seq + 1 * np.random.randn(l_seq)
 
 min_pos, min_dev, dev = util.match(rate, data_src, data_seq, display=True)

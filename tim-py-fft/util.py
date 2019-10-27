@@ -79,43 +79,43 @@ class util():
 	'''
 	@param: rate The sampling rate of the input audio;
 	@param: src The source of the audio that is compared to;
-	@param: seq The sequence of the audio that is compared.
+	@param: det The sequence of the audio that is compared.
 	
-	@return: min_pos The starting position of the best fit of seq in src;
+	@return: min_pos The starting position of the best fit of det in src;
 	@return: min_dev The total absolute deviation of the best fit
-	@return: the function of deviation between seq and src over time (relative to the starting position pos).
+	@return: the function of deviation between det and src over time (relative to the starting position pos).
 	'''
 	@staticmethod
-	def match(rate, src, seq, display=False):
+	def match(rate, src, det, display=False):
 		peak_src = util.findPeak(rate, src, display=False)
-		peak_seq = util.findPeak(rate, seq, display=False)
+		peak_det = util.findPeak(rate, det, display=False)
 
 		l_src = len(src)
-		l_seq = len(seq)
+		l_det = len(det)
 
 		lp_src = len(peak_src)
-		lp_seq = len(peak_seq)
+		lp_det = len(peak_det)
 
 		EPSILON = 50
 
 		min_dev = 0x7fffffff
 		min_pos = 0
 		min_maxsrc = 0
-		min_maxseq = 0
+		min_maxdet = 0
 
 
-		max_seq = 0
-		for j in range(0,lp_seq):
-			if max_seq < seq[peak_seq[j]]: max_seq = seq[peak_seq[j]]
+		max_det = 0
+		for j in range(0,lp_det):
+			if max_det < det[peak_det[j]]: max_det = det[peak_det[j]]
 
 		for i in range(0,lp_src):
-			if peak_src[i] < peak_seq[0]: continue;
-			if peak_src[i] - peak_seq[0] + l_seq > l_src: break;
+			if peak_src[i] < peak_det[0]: continue;
+			if peak_src[i] - peak_det[0] + l_det > l_src: break;
 
 			# matching the peaks
 			mth = True
-			for j in range(1,lp_seq):
-				if abs(abs(peak_src[i+j]-peak_src[i])-abs(peak_seq[j]-peak_seq[0])) > EPSILON:
+			for j in range(1,lp_det):
+				if abs(abs(peak_src[i+j]-peak_src[i])-abs(peak_det[j]-peak_det[0])) > EPSILON:
 					mth = False
 					break
 
@@ -123,7 +123,7 @@ class util():
 
 			# after peaks are matched, compare the min total deviation
 			tmp_dev = 0
-			mth_pos = peak_src[i]-peak_seq[0]
+			mth_pos = peak_src[i]-peak_det[0]
 			
 			max_src = 0
 			j=i
@@ -131,35 +131,41 @@ class util():
 				if max_src < src[peak_src[j]]: max_src = src[peak_src[j]]
 				j -= 1
 			j=i
-			while(peak_src[j]<=mth_pos + l_seq and j<lp_src):
+			while(peak_src[j]<=mth_pos + l_det and j<lp_src):
 				if max_src < src[peak_src[j]]: max_src = src[peak_src[j]]
 				j += 1
 
-			for j in range(0,l_seq):
-				tmp_dev += abs(src[j + mth_pos]/max_src - seq[j]/max_seq)
-				# tmp_dev += abs(src[j + mth_pos] - seq[j])
+			for j in range(0,l_det):
+				tmp_dev += abs(src[j + mth_pos]/max_src - det[j]/max_det)
+				# tmp_dev += abs(src[j + mth_pos] - det[j])
 
-			# print(str(peak_src[i]) + " " + str(max_src) + " " + str(max_seq))
+			# print(str(peak_src[i]) + " " + str(max_src) + " " + str(max_det))
 
 			if tmp_dev < min_dev:
 				min_dev = tmp_dev
 				min_pos = mth_pos
 				min_maxsrc = max_src
-				min_maxseq = max_seq
+				min_maxdet = max_det
 
 		dev = []
-		for i in range(0,l_seq):
-			# dev.append(src[i + min_pos] - seq[i])
-			dev.append(src[i + min_pos]/min_maxsrc - seq[i]/min_maxseq)
+		for i in range(0,l_det):
+			# dev.append(src[i + min_pos] - det[i])
+			dev.append(src[i + min_pos]/min_maxsrc - det[i]/min_maxdet)
 
 		if display:
-			t = np.linspace(0,l_seq/rate,l_seq)
+			print(min_pos)
+			print(min_dev)
+
+			t = np.linspace(0,l_det/rate,l_det)
+
 			fig, ax = plt.subplots()
 			ax.plot(t, dev)
 			plt.show()
 
-			print(min_pos)
-			print(min_dev)
+			fig, ax = plt.subplots()
+			ax.plot(t, det / max_det, "r")
+			ax.plot(t, src[min_pos:min_pos+l_det] / max_src, "g")
+			plt.show()
 
 		return min_pos, min_dev, dev
 
