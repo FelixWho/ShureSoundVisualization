@@ -17,12 +17,18 @@
 
 		<!-- Banner -->
 			<section id="banner">
-				<h2><strong>Tim</strong> is a solution to visualize the audio and measure audio quality</h2>
+				<h2><strong>Tim</strong> is a solution to visualize audio and measure audio quality</h2>
 				
 			</section>
 
 		<!-- One -->
 			<section id="one" class="wrapper special">
+				<div class = "outer">
+					<header class = "major">
+						<h2>Intentions<h2>
+					</header>
+					<p>To test a room for its audio-recording capabilities and to visualize audio.</p>
+				</div>
 				<div class="inner">
 					<header class="major">
 						<h2>Techologies We Use</h2>
@@ -32,29 +38,29 @@
 					<!-- 2:1 is the best ratio -->
 					<div class="features">
 						<div class="feature">
-							<span class="image fit"><img src="images/pic01.jpg" alt="" /></span>
+							<span class="image fit"><img src="images/visualization.png" alt="" /></span>
 							<h3>Audio Visualization</h3>
-							<p>We make 3 cubes zooming according to the amplitude changes in different frequencies in JavaScript.</p>
+							<p>We use Three.js to display audio frequencies with 3D cubes and change the background color when lower frequencies register.</p>
 						</div>
 						<div class="feature">
 							<span class="image fit"><img src="images/pic-fft.png" alt="" /></span>
-							<h3>Quality Measurement</h3>
-							<p>Using python, we match the chunks detector receives with corresponding parts in original music and calculate the level of noises.</p>
+							<h3>Audio Quality Measurement</h3>
+							<p>Using Python, we compare discrete fourier transform outputs of idealized and realized sound clips.</p>
 						</div>
 						<div class="feature">
 							<span class="image fit"><img src="images/pic01.jpg" alt="" /></span>
-							<h3>Feugiat nullam</h3>
-							<p>Sed tempus feugiat adipiscing nisl cursus aliquam dolore.</p>
+							<h3>GCP</h3>
+							<p>We use GCP to create an Apache server with flask backend and our own API endpoints in order to stream audio.</p>
 						</div>
 						<div class="feature">
 							<span class="image fit"><img src="images/pic01.jpg" alt="" /></span>
-							<h3>Amet imperdiet</h3>
-							<p>Sed tempus feugiat adipiscing nisl cursus aliquam dolore.</p>
+							<h3>Lots of Math</h3>
+							<p>For example, we balance our audio input by frequency variance and median to ensure our visualization looks consistent.</p>
 						</div>
 						<div class="feature">
 							<span class="image fit"><img src="images/pic01.jpg" alt="" /></span>
-							<h3>Tempus lorem</h3>
-							<p>Sed tempus feugiat adipiscing nisl cursus aliquam dolore.</p>
+							<h3>Coca-Cola Products</h3>
+							<p>Yes</p>
 						</div>
 					</div>
 				</div>
