@@ -86,9 +86,10 @@ function startListening() {
         const analyzer = context.createAnalyser();
 
         analyzer.fftSize = 512;
-        // analyzer.minDecibels = -100;
-        // analyzer.maxDecibels = -10;
-        analyzer.smoothingTimeConstant = 0.6;
+
+        analyzer.minDecibels = -100;
+        analyzer.maxDecibels = -10;
+        analyzer.smoothingTimeConstant = 0.60;
 
         source.connect(analyzer);
         analyzer.connect(fakeDestination);
@@ -135,54 +136,77 @@ function startListening() {
 
 
 
-    const QSIZE = 32;
-    let means = new Float64Array(analyzer.frequencyBinCount);
-    let squares = new Float64Array(analyzer.frequencyBinCount);
-    let variance = new Float64Array(analyzer.frequencyBinCount);
+    const QSIZE = 256;
+    var means = new Float64Array(analyzer.frequencyBinCount);
 
     for(let i = 0; i < analyzer.frequencyBinCount; i++) {
         data[i] = new RollingQueue(QSIZE);
         means[i] = 0;
-        squares[i] = 0;
-        variance[i] = 0;
     }
 
     let bins = new Array(BINS + 1);
+    let binVariances = new Float64Array(BINS);
+    let binSums = new Float64Array(BINS);
+    let binSquares = new Float64Array(BINS);
 
-    // console.log(bins);
+    for(let i = 0; i < BINS; i++) {
+        bins[i] = i * Math.floor(analyzer.frequencyBinCount / BINS);
+    }
+
+    bins = [0, 3, 100, 256];
+
+    bins[BINS] = analyzer.frequencyBinCount;
+
+    console.log(bins);
 
     function animate() {
         let buf = new Float32Array(analyzer.frequencyBinCount);
         analyzer.getFloatFrequencyData(buf);
 
-        let totalVariance = 0.0;
+        let totalMean = 0;
+        let totalSquared = 0;
+        // console.log(sums);
+
+        let binIndex = 0;
+
+        for(let i = 0; i < BINS; i++) {
+            binVariances[i] = 0;
+            binSums[i] = 0;
+            binSquares[i] = 0;
+        }
 
         for(let i = 0; i < analyzer.frequencyBinCount; i++) {
+            if(i >= bins[binIndex + 1]) {
+                binIndex++;
+            }
+
             let element = buf[i] / QSIZE;
             if(!isNaN(element) && isFinite(element)) {
 
                 // console.log(element);
 
-                means[i] += element;
-                squares[i] += element * element;
+                means[i] = means[i] + element;
 
                 // adds it to the data... and gets the data element that is no longer relevant.
                 let lastElement = data[i].add(element);
 
-                means[i] -= lastElement;
-                squares[i] -= lastElement * lastElement;
+                means[i] -= lastElement ;
 
-                variance[i] =  QSIZE * squares[i] - means[i] * means[i];
-
-                totalVariance += variance[i];
             }
+
+            binSums[binIndex] += means[i];
+            binSquares[binIndex] += means[i] * means[i];
         }
 
+        let sumVars = 0;
+        for(let i = 0; i < BINS; i++) {
+            const binWidth = (bins[i + 1] - bins[i]);
+            const sums = binSums[i];
+            const squares = binSquares[i];
 
-        console.log(variance);
+            // console.log(squares, binWidth, sums);
 
-        let runningVariance = 0;
-
+<<<<<<< HEAD
         bins = [0, 100, 180, 255];
 
         // for(let i = 0; i < analyzer.frequencyBinCount; i++) {
@@ -193,34 +217,75 @@ function startListening() {
         //         runningVariance -= totalVariance/BINS;
         //     }
         // }
+=======
+            binVariances[i] = squares / binWidth - Math.pow(sums / binWidth, 2);
+
+            sumVars += binVariances[i];
+        }
+
+        for(let i= 0; i < BINS; i++) {
+            // if (binVariances[i] < sumVars/BINS) {
+            //     if(BINS > 2) {
+            //         if (i === 0) {
+            //             bins[1]++;
+            //         }
+            //         else if (i === BINS-1) {
+            //             bins[i]--;
+            //         }
+            //         else {
+            //             bins[i]--;
+            //             bins[i+1]++;
+            //         }
+            //     }
+            // }
+            // else {
+            //     if(BINS > 1) {
+            //         if (i === 0) {
+            //             // bins[i + 1]--;
+            //         }
+            //         else if (i === BINS - 1) {
+            //             // bins[i]++;
+            //         }
+            //         else if (bins[i+1] > bins[i] + 2){
+            //             // bins[i+1]--;
+            //             // bins[i]++;
+            //         }
+            //     }
+            // }
+        }
+>>>>>>> 70a660b228c7deaaf52c4f715ffc072b7762348e
+
+        // console.log(binSums, binSquares, binVariances);
 
 
+        // console.log(totalSquared);
+        // console.log(totalMean);
+        //
+        // var totalVariance = totalSquared / analyzer.frequencyBinCount - Math.pow(totalMean / analyzer.frequencyBinCount, 2);
+
+
+
+        // console.log(bins);
         arr = bins;
-
-        // console.log(arr);
 
         for(let i = 0; i < BINS; i++) {
             let width = bins[i+1] - bins[i];
-
-            let theMean = 0;
-            let theVariance = 0;
-            let theVal = 0;
-
-            for(let j = bins[i]; j < bins[i+1]; j++) {
-                theMean += means[i];
-                theVariance += variance[i];
-                theVal += buf[i];
+            let mean = binSums[i] / width;
+            let val = 0;
+            for(let j = bins[i]; j < bins[i + 1]; j++) {
+                val += buf[j];
             }
-            theMean /= width;
-            theVariance /= width;
-            theVal /= width;
+            val /= width;
 
-
+<<<<<<< HEAD
             let zscore = (median(buf.slice(bins[i], bins[i+1])) + 100)/90;
+=======
+            let zscore = (val - mean) / Math.sqrt(binVariances[i]);
+>>>>>>> 70a660b228c7deaaf52c4f715ffc072b7762348e
 
             console.log(zscore);
 
-            let scale = 1 + 4*Math.min(Math.max(zscore, 0), 1);
+            let scale = 3 + Math.min(Math.max(zscore, -2), 2);
 
             meshes[i].scale.x = scale;
             meshes[i].scale.y = scale;
@@ -233,12 +298,12 @@ function startListening() {
 
         requestAnimationFrame( animate );
 
-        meshes[0].rotation.x += 0.01;
-        meshes[0].rotation.y += 0.01;
-        meshes[1].rotation.x -= 0.01;
-        meshes[1].rotation.y += 0.01;
-        meshes[2].rotation.x -= 0.01;
-        meshes[2].rotation.y -= 0.01;
+        // mesh1.rotation.x += 0.005;
+        // mesh1.rotation.y += 0.005;
+        // mesh2.rotation.x -= 0.005;
+        // mesh2.rotation.y += 0.005;
+        // mesh3.rotation.x -= 0.005;
+        // mesh3.rotation.y -= 0.005;
 
 
         renderer.render( scene, camera );
