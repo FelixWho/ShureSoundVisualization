@@ -112,6 +112,7 @@ function startListening() {
         mesh2.position.set(0,0,0);
         mesh3.position.set(0.5,0,0);
 
+        /* tunnel
         let points = [];
 
         for (let i = 0; i < 5; i += 1) {
@@ -140,18 +141,51 @@ function startListening() {
 
         var light = new THREE.HemisphereLight( 0xffffbb, 0x887979, 0.9);
         scene.add( light );
-
+        */
         renderer = new THREE.WebGLRenderer( {antialias: true, alias: true} );
         renderer.setSize( window.innerWidth, window.innerHeight );
 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.setClearColor (0xdfe6e9, 1);
+        //renderer.setClearColor (0xdfe6e9, 1);
         document.body.appendChild(renderer.domElement);
 
     }
 
     init();
+
+    function refreshBins(){
+        let buf = new Float32Array(analyzer.frequencyBinCount);
+        analyzer.getFloatFrequencyData(buf);
+        /**** FELIX EDIT *****/
+        const totalBin = analyzer.frequencyBinCount-1;
+        let data = new Float64Array(analyzer.frequencyBinCount);
+        let sum = new Float64Array(data.length);
+        let sum_sq = new Float64Array(data.length);
+        sum[0] = buf[0];
+        sum_sq[0] = Math.pow(buf[0], 2);
+        for(let i = 1; i < buf.length; i++){
+            sum[i] = buf[i]+sum[i-1];
+            sum_sq[i] = Math.pow(buf[i], 2)+sum_sq[i-1];
+        }
+        // two pointer
+        for(let i = 0; i < buf.length; i++){
+            for(let j = i+1; j < buf.length; j++){
+                let var1 = (sum_sq[i])/i - Math.pow(sum[i]/i, 2);
+                let var2 = (sum_sq[j]-sum_sq[i])/(j-i) - Math.pow((sum[j]-sum[i])/(j-i), 2);
+                let var3 = (sum_sq[totalBin]-sum_sq[j])/(totalBin-j) - Math.pow((sum[totalBin]-sum[j])/(totalBin-j), 2);
+                if(Math.abs(var1-var2) <= 2 && Math.abs(var2-var3) <= 2){
+                    arr[1] = i; arr[2] = j;
+                    console.log(var1, var2, var3);
+                    console.log(0, i, j, buf.length);
+                    console.log("Mean: ", sum[i]/i, (sum[j]-sum[i])/(j-i), (sum[totalBin]-sum[j])/(totalBin-j));
+                    return;
+                }
+            }
+        }
+
+        //console.log(0,arr[1], arr[2], 255);
+    }
 
     function animate() {
     
@@ -161,12 +195,6 @@ function startListening() {
 
         const minFreq = 0;
         const maxFreq = context.sampleRate / 2;
-
-        var data = [];
-        const QSIZE = 256;
-        var means = new Float64Array(analyzer.frequencyBinCount);
-        
-
 
         let sum1 = 0.0, sum2 = 0.0, sum3 = 0.0;
         for(let i = a; i < Math.min(buf.length, b); i++){
@@ -196,8 +224,8 @@ function startListening() {
         mesh3.rotation.x -= 0.005;
         mesh3.rotation.y -= 0.005;
 
-        approx_min = -160;
-        approx_max = -70;
+        approx_min = -150;
+        approx_max = -60;
 
         scaleish1 = 1.0*(avg1 - approx_min)/(approx_max - approx_min);
         scaleish2 = 1.0*(avg2 - approx_min)/(approx_max - approx_min);
@@ -221,7 +249,10 @@ function startListening() {
 
     }
 
-    let arr =  [25, 45, 60, 90];
+    let arr =  [0, 45, 60, 255];
+    const interval = setInterval(function() {
+        refreshBins();
+    }, 250);
     animate();
         
     });
