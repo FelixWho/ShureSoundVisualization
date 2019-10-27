@@ -86,7 +86,10 @@ function startListening() {
         const analyzer = context.createAnalyser();
 
         analyzer.fftSize = 512;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1343d1f585418dd98e7cee64c876b61e67b11a13
         analyzer.minDecibels = -100;
         analyzer.maxDecibels = -10;
         analyzer.smoothingTimeConstant = 0.60;
@@ -148,6 +151,7 @@ function startListening() {
     let binVariances = new Float64Array(BINS);
     let binSums = new Float64Array(BINS);
     let binSquares = new Float64Array(BINS);
+<<<<<<< HEAD
 
     for(let i = 0; i < BINS; i++) {
         bins[i] = i * Math.floor(analyzer.frequencyBinCount / BINS);
@@ -155,6 +159,15 @@ function startListening() {
 
     bins = [0, 3, 100, 256];
 
+=======
+
+    for(let i = 0; i < BINS; i++) {
+        bins[i] = i * Math.floor(analyzer.frequencyBinCount / BINS);
+    }
+
+    bins = [0, 3, 100, 256];
+
+>>>>>>> 1343d1f585418dd98e7cee64c876b61e67b11a13
     bins[BINS] = analyzer.frequencyBinCount;
 
     console.log(bins);
@@ -193,6 +206,7 @@ function startListening() {
                 means[i] -= lastElement ;
 
             }
+<<<<<<< HEAD
 
             binSums[binIndex] += means[i];
             binSquares[binIndex] += means[i] * means[i];
@@ -218,6 +232,21 @@ function startListening() {
         //     }
         // }
 =======
+=======
+
+            binSums[binIndex] += means[i];
+            binSquares[binIndex] += means[i] * means[i];
+        }
+
+        let sumVars = 0;
+        for(let i = 0; i < BINS; i++) {
+            const binWidth = (bins[i + 1] - bins[i]);
+            const sums = binSums[i];
+            const squares = binSquares[i];
+
+            // console.log(squares, binWidth, sums);
+
+>>>>>>> 1343d1f585418dd98e7cee64c876b61e67b11a13
             binVariances[i] = squares / binWidth - Math.pow(sums / binWidth, 2);
 
             sumVars += binVariances[i];
@@ -278,10 +307,14 @@ function startListening() {
             val /= width;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             let zscore = (median(buf.slice(bins[i], bins[i+1])) + 100)/90;
 =======
             let zscore = (val - mean) / Math.sqrt(binVariances[i]);
 >>>>>>> 70a660b228c7deaaf52c4f715ffc072b7762348e
+=======
+            let zscore = (val - mean) / Math.sqrt(binVariances[i]);
+>>>>>>> 1343d1f585418dd98e7cee64c876b61e67b11a13
 
             console.log(zscore);
 

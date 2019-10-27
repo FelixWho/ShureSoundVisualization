@@ -25,11 +25,14 @@ l_seq = len(data_seq)
 
 # --------------------------------------------------------------- pattern matching
 # plotting the wave figure and the Fourier Transformation figure
-# X, freqs = util.ttf(rate, data_seq, plot=True)
+# A, freqs = util.FFT(rate, data_seq, plot=True)
 
 # matching for the smallest total deviation
 
 # manually make some noice
 data_seq = data_seq + 1 * np.random.randn(l_seq)
 
-min_pos, min_dev, dev = util.match(rate, data_src, data_seq, display=True)
+min_pos, min_dev, dev = util.match(rate, data_src, data_seq, display=True, peakProne=True)
+
+util.smoothAverage(rate, data_seq, 10, display=True)
+util.smoothIFFT(rate, data_seq, 10, display=True)

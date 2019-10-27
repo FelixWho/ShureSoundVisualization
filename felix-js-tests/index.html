@@ -272,13 +272,13 @@ function startListening() {
         let buf = new Float32Array(analyzer.frequencyBinCount);
         analyzer.getFloatFrequencyData(buf);
         let sum = 0.0;
-
         for(let i = 0; i < 80; i++){
             sum+=buf[i];
         }
         let avg = sum/80.0;
 
         const timNoise = 1;
+
 
         if(avg > prevAvg && (avg-prevAvg)/Math.abs(prevAvg) > 0.25){
             console.log("change color");
