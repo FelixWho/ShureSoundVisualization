@@ -18,6 +18,7 @@ function startListening() {
 
         // server side
         var postUrl = "";
+        var fileID = "";
 
         function urlInit() {
             const req = new XMLHttpRequest();
@@ -31,13 +32,39 @@ function startListening() {
         function urlCallback(event) {
 
             let data = JSON.parse(event.target.responseText);
-            //console.log(data);
+            console.log(data);
             //console.log("success", data.success);
 
             postUrl = data.url;
+            let felix = postUrl.split("/");
+            fileID = felix[felix.length - 1];
+
+            setTimeout(getServerData, 500);
         }
 
         urlInit();
+
+        var timNoise = 0;
+        var ifft = [];
+
+        function getServerData() {
+            const req = new XMLHttpRequest();
+
+            req.open("GET", "http://35.193.212.185/api/analyze/" + sessionID + "/" + fileID, true);
+            req.addEventListener("load", serverCallback);
+            req.send();
+        }
+
+        function serverCallback(event) {
+            let data = JSON.parse(event.target.responseText);
+
+            console.log(data);
+
+            timNoise = Math.max(10*data.noise, 20);
+            ifft = data.ifft;
+
+            setTimeout(getServerData, 50);
+        }
 
 
 
@@ -277,8 +304,6 @@ function startListening() {
             sum+=buf[i];
         }
         let avg = sum/80.0;
-
-        const timNoise = 4;
 
 
         if(avg > prevAvg && (avg-prevAvg)/Math.abs(prevAvg) > 0.25){
