@@ -59,6 +59,7 @@ function startListening() {
 
             const packet = {"data" : dataString, "index" : index++};
             //console.log("packet: "+JSON.stringify(packet));
+            /*
             const xmlHttp = new XMLHttpRequest();
             xmlHttp.open("POST", "http://35.193.212.185" + postUrl, true);
             xmlHttp.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -160,6 +161,12 @@ function startListening() {
 
         const minFreq = 0;
         const maxFreq = context.sampleRate / 2;
+
+        var data = [];
+        const QSIZE = 256;
+        var means = new Float64Array(analyzer.frequencyBinCount);
+        
+
 
         let sum1 = 0.0, sum2 = 0.0, sum3 = 0.0;
         for(let i = a; i < Math.min(buf.length, b); i++){
