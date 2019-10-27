@@ -249,13 +249,13 @@ class util():
 
 
 	'''
-	@param: x The sequence that is being accessed
-	@param: level The level of smooth when accessing
+	@param: x The sequence that is being assessed
+	@param: level The level of smooth when assessing
 
 	@return: dev The total deviation of the sound sequence
 	'''
 	@staticmethod
-	def smoothnessAccessAverage(rate, x, level):
+	def smoothnessAssessAverage(rate, x, level):
 		max_x = 0
 		for i in x:
 			if i > max_x: max_x = i
@@ -272,13 +272,13 @@ class util():
 		return dev/tot
 
 	'''
-	@param: x The sequence that is being accessed
-	@param: level The level of smooth when accessing
+	@param: x The sequence that is being assessed
+	@param: level The level of smooth when assessing
 
 	@return: dev The total deviation of the sound sequence
 	'''
 	@staticmethod
-	def smoothnessAccessIFFT(rate, x, level):
+	def smoothnessAssessIFFT(rate, x, level):
 		max_x = 0
 		for i in x:
 			if i > max_x: max_x = i
@@ -304,7 +304,7 @@ class util():
 	@return: the function of deviation between det and src over time (relative to the starting position pos).
 	'''
 	@staticmethod
-	def match(rate, src, det, peakProne=False, display=False):
+	def match(rate, src, det, peakPrune=False, display=False):
 		peak_src = util.findPeak(rate, src, display=False)
 		peak_det = util.findPeak(rate, det, display=False)
 
@@ -334,7 +334,7 @@ class util():
 			if peak_src[i] - peak_det[0] + l_det > l_src: break;
 
 			# # matching the peaks
-			if peakProne:
+			if peakPrune:
 				mth = True
 				for j in range(1,lp_det):
 					if abs(abs(peak_src[i+j]-peak_src[i])-abs(peak_det[j]-peak_det[0])) > EPSILON:
