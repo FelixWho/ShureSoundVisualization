@@ -8,6 +8,7 @@
 <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="../three.min.js"></script>
 <script src="../jquery-3.4.1.min.js"></script>
+<link rel="stylesheet" href="theme.css">
 <script>
 function startListening() {
     navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
@@ -15,7 +16,7 @@ function startListening() {
         const source = context.createMediaStreamSource(stream);
 
         // server side
-        var sessionID = "" + Date.now();
+        var sessionID = "" + 7;
         var postUrl = "";
 
         function urlInit() {
@@ -310,11 +311,11 @@ function startListening() {
         startListening();
 
         let back = document.createElement("INPUT");
-        back.type = "submit"; back.value = "back";
+        back.type = "submit"; back.value = "Stop"; back.id = "back";
         back.addEventListener("click", function(event){
             location.reload(false);
         })
-        document.body.insertBefore(back, document.getElementById("listener"));
+        document.body.insertBefore(back, document.body.children[0]);
 
         if(document.getElementById("listener")){
             document.getElementById("listener").remove();
@@ -333,7 +334,7 @@ function startListening() {
         back.addEventListener("click", function(event){
             location.reload(false);
         })
-        document.body.insertBefore(back, document.getElementById("listener"));
+        document.body.insertBefore(back, document.body.children[0]);
         
         if(document.getElementById("listener")){
             document.getElementById("listener").remove();
@@ -345,14 +346,12 @@ function startListening() {
     }
 
 </script>
-
-<input type = "submit" id = "listener" value = "listener">
-<input type = "submit" id = "player" value = "player">
-
+<div class ="wrapper" id = "butclass">
+    <input class = "button" type = "submit" id = "listener" value = "Listen">
+</div>
 <script>
     /* EVENT LISTENERS */
     document.getElementById("listener").addEventListener("click", listener, false);
-    document.getElementById("player").addEventListener("click", player, false);
 </script>
 
 </body>
