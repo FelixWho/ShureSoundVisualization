@@ -1,0 +1,27 @@
+
+
+.wrapper {
+    display: flex;
+    justify-content: center;
+    align-items:center;
+    height: 100vh;
+    background-color: #2C3A47;
+}
+
+.button {
+    border-radius: 0px;
+    background-color: #CAD3C8;
+    padding: 32px;
+    font-size: 32px;
+}
+
+#eventID{
+width: 100%;
+box-sizing: border-box;
+}
+
+#back {
+
+
+}
+
