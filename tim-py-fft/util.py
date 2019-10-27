@@ -77,13 +77,82 @@ class util():
 		return peak
 
 	'''
+	@param: rate The sampling rate of the input audio;
+	@param: x The discrete magnitude function over time;
+	@param: display Whether or not to show the plot of the peaks.
+
+	@return: peak The list of position of peaks.
+	'''
+	def findPeakZScore(rate, x, display=False): 
+		l_window = 25
+		thd = 3.5
+
+		s1 = 0
+		s2 = 0
+		ss1 = []
+		ss2 = []
+		sss = []
+		sig = []
+		l_x = len(x)
+		peak = []
+
+		for i in range(0, l_window):
+			s1 += x[i];
+			s2 += x[i] ** 2
+
+			ss1.append(0)
+			ss2.append(0)
+			sig.append(0)
+			sss.append(0)
+
+		for i in range(l_window, l_x):
+			sigma = (s2/l_window-(s1/l_window)**2) ** 0.5
+			sig.append(sigma)
+
+			if x[i] > s1/l_window + thd * sigma: peak.append(i)
+				# if ((i>0 and x[i-1]<x[i]) or i==0) and ((i<l_x-1 and x[i]>x[i+1]) or i==l_x-1): peak.append(i)
+			s1 = s1 - x[i-l_window] + x[i]
+			s2 = s2 - x[i-l_window] ** 2 + x[i] ** 2
+
+			sss.append(s1/l_window)
+			ss1.append(s1/l_window + thd * sigma)
+			ss2.append(s2/l_window - thd * sigma)
+
+		if display:
+			print(len(peak))
+			print(peak)
+
+		rate = 44100
+		t = np.linspace(0,l_x/rate,l_x)
+
+		fig, ax = plt.subplots()
+		ax.plot(t, x)
+
+		peak_tmp = []
+		for i in range(0,l_x):
+			if i in peak: 
+				peak_tmp.append(x[i])
+			else: 
+				peak_tmp.append(0)
+		ax.stem(t, np.array(peak_tmp))
+
+		ax.plot(t,ss1)
+		# ax.plot(t,ss2)
+		# ax.plot(t,sig)
+		# ax.plot(t,sss)
+
+		plt.show()
+
+		return peak
+
+	'''
 	@param x The sequence that is being smoothed
 	@param level The number of nodes in the neighbourhood that is used to smooth the data
 
 	@return y The smoothed data of x
 	'''
 	@staticmethod
-	def smooth(x, level):
+	def smoothAverage(x, level):
 		l_x = len(x)
 		y = [0] * l_x
 
@@ -116,15 +185,13 @@ class util():
 		for i in x:
 			if i > max_x: max_x = i
 
-		y = util.smooth(x,level)
+		y = util.smoothAverage(x,level)
 		dev = 0
 		l_x = len(x)
 		for i in range(0,l_x):
 			dev += abs(x[i]-y[i])/max_x
 
 		return dev/l_x
-
-
 
 	'''
 	@param: rate The sampling rate of the input audio;
@@ -223,66 +290,4 @@ class util():
 
 		return min_pos, min_dev, dev
 
-
-	# Z-Score peak Finding
-	# def findPeak(rate, x, display=False): 
-		# l_window = 25
-		# thd = 3.5
-
-		# s1 = 0
-		# s2 = 0
-		# ss1 = []
-		# ss2 = []
-		# sss = []
-		# sig = []
-		# l_x = len(x)
-		# peak = []
-
-		# for i in range(0, l_window):
-		# 	s1 += x[i];
-		# 	s2 += x[i] ** 2
-
-		# 	ss1.append(0)
-		# 	ss2.append(0)
-		# 	sig.append(0)
-		# 	sss.append(0)
-
-		# for i in range(l_window, l_x):
-		# 	sigma = (s2/l_window-(s1/l_window)**2) ** 0.5
-		# 	sig.append(sigma)
-
-		# 	if x[i] > s1/l_window + thd * sigma: peak.append(i)
-		# 		# if ((i>0 and x[i-1]<x[i]) or i==0) and ((i<l_x-1 and x[i]>x[i+1]) or i==l_x-1): peak.append(i)
-		# 	s1 = s1 - x[i-l_window] + x[i]
-		# 	s2 = s2 - x[i-l_window] ** 2 + x[i] ** 2
-
-		# 	sss.append(s1/l_window)
-		# 	ss1.append(s1/l_window + thd * sigma)
-		# 	ss2.append(s2/l_window - thd * sigma)
-
-		# if display:
-		# 	print(len(peak))
-		# 	print(peak)
-
-		# rate = 44100
-		# t = np.linspace(0,l_x/rate,l_x)
-
-		# fig, ax = plt.subplots()
-		# ax.plot(t, x)
-
-		# peak_tmp = []
-		# for i in range(0,l_x):
-		# 	if i in peak: 
-		# 		peak_tmp.append(x[i])
-		# 	else: 
-		# 		peak_tmp.append(0)
-		# ax.stem(t, np.array(peak_tmp))
-
-		# ax.plot(t,ss1)
-		# # ax.plot(t,ss2)
-		# # ax.plot(t,sig)
-		# # ax.plot(t,sss)
-
-		# plt.show()
-
-		# return peak
+	
