@@ -103,6 +103,29 @@ class util():
 			y[i] = tmp/level
 
 		return y
+
+	'''
+	@param: x The sequence that is being accessed
+	@param: level The level of smooth when accessing
+
+	@return: dev The total deviation of the sound sequence
+	'''
+	@staticmethod
+	def smoothness(x, level):
+		max_x = 0
+		for i in x:
+			if i > max_x: max_x = i
+
+		y = util.smooth(x,level)
+		dev = 0
+		l_x = len(x)
+		for i in range(0,l_x):
+			dev += abs(x[i]-y[i])/max_x
+
+		return dev/l_x
+
+
+
 	'''
 	@param: rate The sampling rate of the input audio;
 	@param: src The source of the audio that is compared to;
@@ -113,7 +136,7 @@ class util():
 	@return: the function of deviation between det and src over time (relative to the starting position pos).
 	'''
 	@staticmethod
-	def match(rate, src, det, display=False):
+	def match(rate, src, det, display=False, peakProne=False):
 		peak_src = util.findPeak(rate, src, display=False)
 		peak_det = util.findPeak(rate, det, display=False)
 
@@ -143,13 +166,14 @@ class util():
 			if peak_src[i] - peak_det[0] + l_det > l_src: break;
 
 			# # matching the peaks
-			mth = True
-			for j in range(1,lp_det):
-				if abs(abs(peak_src[i+j]-peak_src[i])-abs(peak_det[j]-peak_det[0])) > EPSILON:
-					mth = False
-					break
+			if peakProne:
+				mth = True
+				for j in range(1,lp_det):
+					if abs(abs(peak_src[i+j]-peak_src[i])-abs(peak_det[j]-peak_det[0])) > EPSILON:
+						mth = False
+						break
 
-			if not mth: continue
+				if not mth: continue
 
 			# after peaks are matched, compare the min total deviation
 			tmp_dev = 0
