@@ -8,13 +8,40 @@
 <div>hi</div>
 <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script>
+
+
+
     navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(async (stream) => {
 
         const context = new AudioContext();
         const source = context.createMediaStreamSource(stream);
 
+        // server side
+        var sessionID = "" + Date.now();
+        var postUrl = "";
 
-        // serverside
+        function init() {
+            const req = new XMLHttpRequest();
+            req.open("POST", "http://35.193.212.185/api/init", true);
+            req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            req.send(JSON.stringify({rate: context.sampleRate, sessionID: sessionID, location: ""}));
+
+            req.addEventListener("load", urlCallback, false);
+        }
+
+        function urlCallback(event) {
+
+            let data = JSON.parse(event.target.responseText);
+            console.log(data);
+            console.log("success", data.success);
+
+            postUrl = data.url;
+        }
+
+        init();
+
+
+
         const processor = context.createScriptProcessor(4096, 1, 1);
 
         source.connect(processor);
@@ -22,15 +49,17 @@
 
         var index = 0;
         processor.onaudioprocess = event => {
-            console.log(event);
+            // console.log(event);
 
             let data = event.inputBuffer.getChannelData(0);
-            console.log(data);
+            // console.log(data);
 
-            const packet = {"data" : data, "index" : index++};
+            let dataString = "[" + data.join(",") + "]";
+
+            const packet = {"data" : dataString, "index" : index++};
             //console.log("packet: "+JSON.stringify(packet));
             const xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("POST", "http://35.193.212.185/api/stream/1", true);
+            xmlHttp.open("POST", "http://35.193.212.185" + postUrl, true);
             xmlHttp.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
             xmlHttp.send(JSON.stringify(packet));
 
