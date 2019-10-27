@@ -10,29 +10,34 @@ rate, data_src = scipy.io.wavfile.read("test/HelloFull.wav")
 data_src = data_src[:,0]
 l_src = len(data_src)
 
-# peek detection for the full audio sequence
-# peak_src = util.findPeak(rate, data_src, display=False)
-
 # ---------------------------------------------------------------- detected sequence
 # loading the received audio chunk
-rate, data_seq = scipy.io.wavfile.read('test/Hello50.wav')
-data_seq = data_seq[:,0]
-l_seq = len(data_seq)
+rate, data_det = scipy.io.wavfile.read('test/Hello50.wav')
+data_det = data_det[:,0]
+l_det = len(data_det)
 
-# peek detection for the recorded audio sequence
-# peak_src = util.findPeak(rate, data_seq, display=True)
+# ---------------------------------------------------------------- demos
 
+# raising edge detection for the recorded audio sequence
+raising_det = util.findSteepRaisingEdge(rate, data_det, display=True)
 
-# --------------------------------------------------------------- pattern matching
-# plotting the wave figure and the Fourier Transformation figure
-# A, freqs = util.FFT(rate, data_seq, plot=True)
+# peak detection for the recorded audio sequence
+peak_det = util.findPeak(rate, data_det, display=True)
 
-# matching for the smallest total deviation
+# Fast Fourier Transmation for the curve
+A, freq = util.FFT(rate, data_det, display=True)
 
 # manually make some noice
-data_seq = data_seq + 1 * np.random.randn(l_seq)
+data_det = data_det + 3 * np.random.randn(len(data_det))
 
-min_pos, min_dev, dev = util.match(rate, data_src, data_seq, display=True, peakProne=True)
+# matching for the smallest total deviation
+min_pos, min_dev, dev = util.match(rate, data_src, data_det, peakProne=True, display=True)
 
-util.smoothAverage(rate, data_seq, 10, display=True)
-util.smoothIFFT(rate, data_seq, 10, display=True)
+# Smoothing curves
+
+util.smoothAverage(rate, data_det, 50, display=True)
+util.smoothIFFT(rate, data_det, 50, display=True)
+
+# Smoothness accessments
+print(smoothnessAssessAverage(rate, data_det, 10))
+print(smoothnessAccessIFFT(rate, data_det, 10))
