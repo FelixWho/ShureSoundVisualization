@@ -10,13 +10,13 @@
 <script src="../jquery-3.4.1.min.js"></script>
 <link rel="stylesheet" href="theme.css">
 <script>
+var sessionID = "7";
 function startListening() {
     navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
         const context = new AudioContext();
         const source = context.createMediaStreamSource(stream);
 
         // server side
-        var sessionID = "" + 7;
         var postUrl = "";
 
         function urlInit() {
@@ -31,8 +31,8 @@ function startListening() {
         function urlCallback(event) {
 
             let data = JSON.parse(event.target.responseText);
-            console.log(data);
-            console.log("success", data.success);
+            //console.log(data);
+            //console.log("success", data.success);
 
             postUrl = data.url;
         }
@@ -59,7 +59,7 @@ function startListening() {
             let dataString = "[" + data.join(",") + "]";
 
             const packet = {"data" : dataString, "index" : index++};
-            console.log("packet: "+JSON.stringify(packet));
+            ////console.log("packet: "+JSON.stringify(packet));
 
             const xmlHttp = new XMLHttpRequest();
             xmlHttp.open("POST", "http://35.193.212.185" + postUrl, true);
@@ -70,7 +70,7 @@ function startListening() {
         };
 
         function callback(d) {
-            console.log(d);
+            ////console.log(d);
         }
 
         const analyzer = context.createAnalyser();
@@ -167,8 +167,8 @@ function startListening() {
                         arr[2] = j;
                     }
                     //arr[1] = i; arr[2] = j;
-                    //console.log(var1, var2, var3);
-                    //console.log(0, arr[1], arr[2], arr[3]);
+                    ////console.log(var1, var2, var3);
+                    ////console.log(0, arr[1], arr[2], arr[3]);
                     //console.log("Mean: ", sum[i]/i, (sum[j]-sum[i])/(j-i), (sum[totalBin]-sum[j])/(totalBin-j));
                     return;
                 }
@@ -321,7 +321,13 @@ function startListening() {
 
     function listener(event){ // user chose listener role
         isListener = true;
-        startListening();
+        
+        let sessionInput = document.getElementById("eventID");
+
+        if(sessionInput) {
+            sessionID = sessionInput.value;
+        }
+        
 
         let back = document.createElement("INPUT");
         back.type = "submit"; back.value = "Stop"; back.id = "back";
@@ -330,12 +336,17 @@ function startListening() {
         })
         document.body.insertBefore(back, document.body.children[0]);
 
+        if(document.getElementById("butclass")){
+            document.getElementById("butclass").remove();
+        }
         if(document.getElementById("listener")){
             document.getElementById("listener").remove();
         }
         if(document.getElementById("player")){
             document.getElementById("player").remove();
         }
+
+        startListening();
     }
 
     function player(event){ // user chose player role
@@ -360,7 +371,10 @@ function startListening() {
 
 </script>
 <div class ="wrapper" id = "butclass">
-    <input class = "button" type = "submit" id = "listener" value = "Listen">
+    <div>
+    <p><input class = "button" type = "submit" id = "listener" value = "Listen"></p>
+    <p><input type = "text" class="eventID" id="eventID" placeholder="Session ID"> </p>   
+    </div>
 </div>
 <script>
     /* EVENT LISTENERS */
