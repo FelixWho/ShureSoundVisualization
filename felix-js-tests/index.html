@@ -134,7 +134,7 @@ function startListening() {
         let sum_sq = new Float64Array(data.length);
         sum[0] = buf[0];
         sum_sq[0] = Math.pow(buf[0], 2);
-        for(let i = 1; i < buf.length; i++){
+        for(let i = 1; i < buf.length-36; i++){
             sum[i] = buf[i]+sum[i-1];
             sum_sq[i] = Math.pow(buf[i], 2)+sum_sq[i-1];
             if(i == buf.length-1){
@@ -142,8 +142,8 @@ function startListening() {
             }
         }
         // two pointer
-        for(let i = 0; i < buf.length; i++){
-            for(let j = i+1; j < buf.length; j++){
+        for(let i = 0; i < buf.length-36; i++){
+            for(let j = i+1; j < buf.length-36; j++){
                 let var1 = (sum_sq[i])/i - Math.pow(sum[i]/i, 2);
                 let var2 = (sum_sq[j]-sum_sq[i])/(j-i) - Math.pow((sum[j]-sum[i])/(j-i), 2);
                 let var3 = (sum_sq[totalBin]-sum_sq[j])/(totalBin-j) - Math.pow((sum[totalBin]-sum[j])/(totalBin-j), 2);
@@ -202,6 +202,29 @@ function startListening() {
         let avg1 = sum1 / ((Math.min(buf.length, b)-a)*1.0);
         let avg2 = sum2 / ((Math.min(buf.length, c)-b)*1.0);
         let avg3 = sum3 / ((Math.min(buf.length, d)-c)*1.0);
+
+        avg1 = median(buf, a, b);
+        avg2 = median(buf, b, c);
+        avg3 = median(buf, c, d);
+
+        function median(array, start, end) {
+            temp = new Array(end-start);
+
+            for(let i = 0; i < end-start; i++) {
+                temp[i] = array[i + start];
+            }
+
+            temp = temp.sort((a, b) => (a - b));
+
+            let middle = Math.floor(temp.length/2);
+            if(temp.length % 2 === 0) {
+                return (temp[middle]+temp[middle-1])/2;
+            }
+            else {
+                return temp[middle];
+            }
+        }
+
         //console.log(avg3);
         //console.log(avg);
 
@@ -241,21 +264,14 @@ function startListening() {
 
     }
 
-    let arr =  [0, 45, 60, 255];
+    function checkChangeColor(){
+
+    }
+
+    let arr =  [0, 45, 60, 219];
     let count = 0;
-    let currAvgDB = 0.0;
-    let lastAvgDB = 0.0;
     const interval = setInterval(function() {
         refreshBins();
-        if(count % 2 == 0){
-            //console.log(Math.abs(1.0*(currAvgDB-lastAvgDB))/Math.abs(lastAvgDB));
-            if(Math.abs(1.0*(currAvgDB-lastAvgDB))/Math.abs(lastAvgDB) >= 0.4){
-                //console.log("hello");
-                // color change
-            }
-            lastAvgDB = currAvgDB;
-        }
-        count = (count+1)%2;
     }, 250);
     animate();
         
