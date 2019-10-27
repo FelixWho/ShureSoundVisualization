@@ -5,8 +5,15 @@ import matplotlib.pyplot as plt
 
 class util():
 	'''
-	@param: x The discrete magnitude over time 
+	@param: rate The sampling rate of the input audio;
+	@param: x The discrete magnitude function over time;
+	@param: plot Whether or not to show the plot of the ttf.
+	
+	@return: A The function of magnitude for each frequency;
+	@return: freq The reference of frequency relating to A.
 	'''
+
+	@staticmethod
 	def ttf(rate, x, plot=False):
 		l_x = len(x)
 		t = np.linspace(0,l_x/rate,l_x)
@@ -18,22 +25,30 @@ class util():
 			ax.set_xlabel("Time [s]")
 			ax.set_ylabel("Signal amplitude")
 
-		X = fftpack.fft(x)
-		freqs = fftpack.fftfreq(l_x) * rate
+		A = fftpack.fft(x)
+		freq = fftpack.fftfreq(l_x) * rate
 
 		if plot:
 
 			fig, ax = plt.subplots()
 
-			ax.stem(freqs, np.abs(X), use_line_collection=True)
+			ax.stem(freq, np.abs(A), use_line_collection=True)
 			ax.set_xlabel('Frequency in Hertz [Hz]')
 			ax.set_ylabel('Frequency Domain (Spectrum) Magnitude')
 			ax.set_xlim(0, 20000)
 
 			plt.show()
 
-		return X, freqs
+		return np.abs(A), freq
 
+	'''
+	@param: rate The sampling rate of the input audio;
+	@param: x The discrete magnitude function over time;
+	@param: display Whether or not to show the plot of the peaks.
+
+	@return: peak The list of position of peaks.
+	'''
+	@staticmethod
 	def findPeak(rate, x, display=False):
 		l_x = len(x)
 		peak = []
@@ -61,6 +76,96 @@ class util():
 
 		return peak
 
+	'''
+	@param: rate The sampling rate of the input audio;
+	@param: src The source of the audio that is compared to;
+	@param: seq The sequence of the audio that is compared.
+	
+	@return: min_pos The starting position of the best fit of seq in src;
+	@return: min_dev The total absolute deviation of the best fit
+	@return: the function of deviation between seq and src over time (relative to the starting position pos).
+	'''
+	@staticmethod
+	def match(rate, src, seq, display=False):
+		peak_src = util.findPeak(rate, src, display=False)
+		peak_seq = util.findPeak(rate, seq, display=False)
+
+		l_src = len(src)
+		l_seq = len(seq)
+
+		lp_src = len(peak_src)
+		lp_seq = len(peak_seq)
+
+		EPSILON = 50
+
+		min_dev = 0x7fffffff
+		min_pos = 0
+		min_maxsrc = 0
+		min_maxseq = 0
+
+
+		max_seq = 0
+		for j in range(0,lp_seq):
+			if max_seq < seq[peak_seq[j]]: max_seq = seq[peak_seq[j]]
+
+		for i in range(0,lp_src):
+			if peak_src[i] < peak_seq[0]: continue;
+			if peak_src[i] - peak_seq[0] + l_seq > l_src: break;
+
+			# matching the peaks
+			mth = True
+			for j in range(1,lp_seq):
+				if abs(abs(peak_src[i+j]-peak_src[i])-abs(peak_seq[j]-peak_seq[0])) > EPSILON:
+					mth = False
+					break
+
+			if not mth: continue
+
+			# after peaks are matched, compare the min total deviation
+			tmp_dev = 0
+			mth_pos = peak_src[i]-peak_seq[0]
+			
+			max_src = 0
+			j=i
+			while(peak_src[j]>=mth_pos and j>=0): 
+				if max_src < src[peak_src[j]]: max_src = src[peak_src[j]]
+				j -= 1
+			j=i
+			while(peak_src[j]<=mth_pos + l_seq and j<lp_src):
+				if max_src < src[peak_src[j]]: max_src = src[peak_src[j]]
+				j += 1
+
+			for j in range(0,l_seq):
+				tmp_dev += abs(src[j + mth_pos]/max_src - seq[j]/max_seq)
+				# tmp_dev += abs(src[j + mth_pos] - seq[j])
+
+			# print(str(peak_src[i]) + " " + str(max_src) + " " + str(max_seq))
+
+			if tmp_dev < min_dev:
+				min_dev = tmp_dev
+				min_pos = mth_pos
+				min_maxsrc = max_src
+				min_maxseq = max_seq
+
+		dev = []
+		for i in range(0,l_seq):
+			# dev.append(src[i + min_pos] - seq[i])
+			dev.append(src[i + min_pos]/min_maxsrc - seq[i]/min_maxseq)
+
+		if display:
+			t = np.linspace(0,l_seq/rate,l_seq)
+			fig, ax = plt.subplots()
+			ax.plot(t, dev)
+			plt.show()
+
+			print(min_pos)
+			print(min_dev)
+
+		return min_pos, min_dev, dev
+
+
+	# Z-Score peak Finding
+	# def findPeak(rate, x, display=False): 
 		# l_window = 25
 		# thd = 3.5
 
