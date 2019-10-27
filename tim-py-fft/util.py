@@ -77,6 +77,33 @@ class util():
 		return peak
 
 	'''
+	@param x The sequence that is being smoothed
+	@param level The number of nodes in the neighbourhood that is used to smooth the data
+
+	@return y The smoothed data of x
+	'''
+	@staticmethod
+	def smooth(x, level):
+		l_x = len(x)
+		y = [0] * l_x
+
+		tmp = 0
+		r = int(level/2)
+		for i in range(0,level):
+			tmp += x[i]
+
+		for i in range(0,r):
+			y[i] = tmp/level
+
+		for i in range(r,l_x-r):
+			tmp = tmp - x[i-r] + x[i+r]
+			y[i] = tmp/level
+
+		for i in range(l_x-r,l_x):
+			y[i] = tmp/level
+
+		return y
+	'''
 	@param: rate The sampling rate of the input audio;
 	@param: src The source of the audio that is compared to;
 	@param: det The sequence of the audio that is compared.
@@ -89,6 +116,9 @@ class util():
 	def match(rate, src, det, display=False):
 		peak_src = util.findPeak(rate, src, display=False)
 		peak_det = util.findPeak(rate, det, display=False)
+
+		# det = util.smooth(det,5)
+		# peak_det = util.findPeak(rate, det, display=True)
 
 		l_src = len(src)
 		l_det = len(det)
@@ -112,7 +142,7 @@ class util():
 			if peak_src[i] < peak_det[0]: continue;
 			if peak_src[i] - peak_det[0] + l_det > l_src: break;
 
-			# matching the peaks
+			# # matching the peaks
 			mth = True
 			for j in range(1,lp_det):
 				if abs(abs(peak_src[i+j]-peak_src[i])-abs(peak_det[j]-peak_det[0])) > EPSILON:
