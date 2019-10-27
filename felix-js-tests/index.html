@@ -78,7 +78,7 @@ function startListening() {
         analyzer.fftSize = 512;
         analyzer.minDecibels = -100;
         analyzer.maxDecibels = -10;
-        analyzer.smoothingTimeConstant = 0.40;
+        analyzer.smoothingTimeConstant = 0.50;
 
         source.connect(analyzer);
         analyzer.connect(fakeDestination);
@@ -86,7 +86,7 @@ function startListening() {
 
     let isListener = false;
     let camera, scene, renderer;
-    let geometry, material, mesh;
+    let geometry, material, mesh, currentColor = 0xdfe6e9;
 
     function init() {
 
@@ -95,10 +95,10 @@ function startListening() {
 
         scene = new THREE.Scene();
         material = new THREE.MeshNormalMaterial();
-
+        
         geometry1 = new THREE.CubeGeometry( 0.07, 0.07, 0.07);
         geometry2 = new THREE.CubeGeometry( 0.07, 0.07, 0.07 );
-        geometry3 = new THREE.CubeGeometry( 0.07,0.07, 0.07 );
+        geometry3 = new THREE.CubeGeometry( 0.07, 0.07, 0.07 );
 
         mesh1 = new THREE.Mesh( geometry1, material );
         mesh2 = new THREE.Mesh( geometry2, material );
@@ -108,16 +108,16 @@ function startListening() {
         scene.add( mesh2 );
         scene.add( mesh3 );
 
-        mesh1.position.set(-0.5, 0, 0);
+        mesh1.position.set(-0.7, 0, 0);
         mesh2.position.set(0,0,0);
-        mesh3.position.set(0.5,0,0);
+        mesh3.position.set(0.7,0,0);
 
         renderer = new THREE.WebGLRenderer( {antialias: true, alias: true} );
         renderer.setSize( window.innerWidth, window.innerHeight );
 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        //renderer.setClearColor (0xdfe6e9, 1);
+        renderer.setClearColor (0xdfe6e9, 1);
         document.body.appendChild(renderer.domElement);
 
     }
@@ -168,7 +168,7 @@ function startListening() {
                     }
                     //arr[1] = i; arr[2] = j;
                     //console.log(var1, var2, var3);
-                    console.log(0, arr[1], arr[2], arr[3]);
+                    //console.log(0, arr[1], arr[2], arr[3]);
                     //console.log("Mean: ", sum[i]/i, (sum[j]-sum[i])/(j-i), (sum[totalBin]-sum[j])/(totalBin-j));
                     return;
                 }
@@ -264,9 +264,36 @@ function startListening() {
 
     }
 
-    function checkChangeColor(){
-
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
     }
+
+    function checkChangeColor(){
+        let colors = [0xdfe6e9, 0xFD7272, 0x3B3B98, 0xF97F51, 0x1B9CFC, 0xB33771, 0xD6A2E8, 0x55E6C1];
+        let buf = new Float32Array(analyzer.frequencyBinCount);
+        analyzer.getFloatFrequencyData(buf);
+        let sum = 0.0;
+
+        for(let i = 0; i < 100; i++){
+            sum+=buf[i];
+        }
+        let avg = sum/100.0;
+
+        if(avg > prevAvg && (avg-prevAvg)/Math.abs(prevAvg) > 0.25){
+            console.log("change color");
+            let newColor = colors[getRandomInt(8)];
+            while(newColor == currentColor) {
+                newColor = colors[getRandomInt(8)];
+            }
+            renderer.setClearColor (newColor, 1);
+            currentColor = newColor;
+        }
+        prevAvg = avg;
+        
+    }
+
+    let prevAvg = -100.0;
+    setInterval(checkChangeColor, 50);
 
     let arr =  [0, 45, 60, 219];
     let count = 0;
