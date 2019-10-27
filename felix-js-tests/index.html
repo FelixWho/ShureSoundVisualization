@@ -9,11 +9,68 @@
 <script src="../three.min.js"></script>
 <script src="../jquery-3.4.1.min.js"></script>
 <script>
-function startListening(){
+function startListening() {
     navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
-        
         const context = new AudioContext();
         const source = context.createMediaStreamSource(stream);
+
+        // server side
+        var sessionID = "" + Date.now();
+        var postUrl = "";
+
+        function urlInit() {
+            const req = new XMLHttpRequest();
+            req.open("POST", "http://35.193.212.185/api/init", true);
+            req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            req.send(JSON.stringify({rate: context.sampleRate, sessionID: sessionID, location: ""}));
+
+            req.addEventListener("load", urlCallback, false);
+        }
+
+        function urlCallback(event) {
+
+            let data = JSON.parse(event.target.responseText);
+            console.log(data);
+            console.log("success", data.success);
+
+            postUrl = data.url;
+        }
+
+        urlInit();
+
+
+
+        const processor = context.createScriptProcessor(4096, 1, 1);
+
+        source.connect(processor);
+
+        const fakeDestination = context.createMediaStreamDestination();
+
+        processor.connect(fakeDestination);
+
+        let index = 0;
+        processor.onaudioprocess = event => {
+            // console.log(event);
+
+            let data = event.inputBuffer.getChannelData(0);
+            // console.log(data);
+
+            let dataString = "[" + data.join(",") + "]";
+
+            const packet = {"data" : dataString, "index" : index++};
+            //console.log("packet: "+JSON.stringify(packet));
+            const xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("POST", "http://35.193.212.185" + postUrl, true);
+            xmlHttp.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            xmlHttp.send(JSON.stringify(packet));
+
+            xmlHttp.addEventListener("load", callback, false);
+        };
+
+        function callback(d) {
+            console.log(d);
+        }
+
         const analyzer = context.createAnalyser();
 
         analyzer.fftSize = 512;
@@ -22,42 +79,7 @@ function startListening(){
         analyzer.smoothingTimeConstant = 0.60;
 
         source.connect(analyzer);
-
-        const destination = context.createMediaStreamDestination();
-
-        analyzer.connect(destination);
-
-        const options = {
-            audioBitsPerSecond: 128000,
-            mimeType: 'audio/webm'
-        };
-
-        const mediaRecorder = new MediaRecorder(destination.stream, options);
-
-        console.log(mediaRecorder);
-
-        const timeslice = 1000;
-        mediaRecorder.start(timeslice);
-
-        let index = 0;
-        mediaRecorder.ondataavailable = event => {
-            // felix: The binary data is somewhere in here. I can help with this.
-            //console.log(event);
-            let binary = "1010"; // binary data held here
-            
-            const packet = {"data" : binary, "index" : index++};
-            //console.log("packet: "+JSON.stringify(packet));
-            const xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("POST", "http://35.193.212.185/api/stream/1", true);
-            xmlHttp.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-            xmlHttp.send(JSON.stringify(packet));
-
-            xmlHttp.addEventListener("load", callback, false);
-        };
-
-        function callback(event){ // function that receives callback and updates DOM. NEEDS PROMISE??
-            //console.log(event.target.responseText);
-        }
+        analyzer.connect(fakeDestination);
 
 
     let isListener = false;
