@@ -78,7 +78,7 @@ function startListening() {
         analyzer.fftSize = 512;
         analyzer.minDecibels = -100;
         analyzer.maxDecibels = -10;
-        analyzer.smoothingTimeConstant = 0.60;
+        analyzer.smoothingTimeConstant = 0.40;
 
         source.connect(analyzer);
         analyzer.connect(fakeDestination);
@@ -112,61 +112,81 @@ function startListening() {
         mesh2.position.set(0,0,0);
         mesh3.position.set(0.5,0,0);
 
-        let points = [];
-
-        for (let i = 0; i < 5; i += 1) {
-            points.push(new THREE.Vector3(0, 0, 100* (i/2)));
-        }
-
-        points[4].y = -10000;
-
-        let curve = new THREE.CatmullRomCurve3(points);
-
-        var tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.7, 50, false);
-
-        var greyTexture = new THREE.TextureLoader().load( "./grey.png" );
-
-        var tubeMaterial = new THREE.MeshStandardMaterial({
-            side: THREE.BackSide, 
-            map: greyTexture
-        });
-        tubeMaterial.map.wrapS = THREE.RepeatWrapping;
-        tubeMaterial.map.wrapT = THREE.RepeatWrapping;
-        tubeMaterial.map.repeat.set(30, 6);
-
-        tubeMesh = new THREE.Mesh(tubeGeometry, tubeMaterial);
-
-        scene.add(tubeMesh);
-
-        var light = new THREE.HemisphereLight( 0xffffbb, 0x887979, 0.9);
-        scene.add( light );
-
         renderer = new THREE.WebGLRenderer( {antialias: true, alias: true} );
         renderer.setSize( window.innerWidth, window.innerHeight );
 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.setClearColor (0xdfe6e9, 1);
+        //renderer.setClearColor (0xdfe6e9, 1);
         document.body.appendChild(renderer.domElement);
 
     }
 
     init();
 
+    function refreshBins(){
+        let buf = new Float32Array(analyzer.frequencyBinCount);
+        analyzer.getFloatFrequencyData(buf);
+        /**** FELIX EDIT *****/
+        const totalBin = analyzer.frequencyBinCount-1;
+        let data = new Float64Array(analyzer.frequencyBinCount);
+        let sum = new Float64Array(data.length);
+        let sum_sq = new Float64Array(data.length);
+        sum[0] = buf[0];
+        sum_sq[0] = Math.pow(buf[0], 2);
+        for(let i = 1; i < buf.length-36; i++){
+            sum[i] = buf[i]+sum[i-1];
+            sum_sq[i] = Math.pow(buf[i], 2)+sum_sq[i-1];
+            if(i == buf.length-1){
+                currAvgDB = 1.0*sum[buf.length-1]/buf.length;
+            }
+        }
+        // two pointer
+        for(let i = 0; i < buf.length-36; i++){
+            for(let j = i+1; j < buf.length-36; j++){
+                let var1 = (sum_sq[i])/i - Math.pow(sum[i]/i, 2);
+                let var2 = (sum_sq[j]-sum_sq[i])/(j-i) - Math.pow((sum[j]-sum[i])/(j-i), 2);
+                let var3 = (sum_sq[totalBin]-sum_sq[j])/(totalBin-j) - Math.pow((sum[totalBin]-sum[j])/(totalBin-j), 2);
+                if(Math.abs(var1-var2) <= 2 && Math.abs(var2-var3) <= 2){
+                    if(Math.abs(arr[1]-i) > 15){
+                        if(arr[1] > i) {
+                            arr[1] -= 15;
+                        } else {
+                            arr[1] += 15;
+                        }
+                    } else {
+                        arr[1] = i;
+                    }
+                    if(Math.abs(arr[2]-j) > 15){
+                        if(arr[2] > j) {
+                            arr[2] -= 15;
+                        } else {
+                            arr[2] += 15;
+                        }
+                    } else {
+                        arr[2] = j;
+                    }
+                    //arr[1] = i; arr[2] = j;
+                    //console.log(var1, var2, var3);
+                    console.log(0, arr[1], arr[2], arr[3]);
+                    //console.log("Mean: ", sum[i]/i, (sum[j]-sum[i])/(j-i), (sum[totalBin]-sum[j])/(totalBin-j));
+                    return;
+                }
+            }
+        }
+
+        //console.log(0,arr[1], arr[2], 255);
+    }
+
     function animate() {
     
         let a = arr[0], b = arr[1], c = arr[2], d = arr[3];
+        if(d < c){d = c;}
         let buf = new Float32Array(analyzer.frequencyBinCount);
         analyzer.getFloatFrequencyData(buf);
 
         const minFreq = 0;
         const maxFreq = context.sampleRate / 2;
-
-        var data = [];
-        const QSIZE = 256;
-        var means = new Float64Array(analyzer.frequencyBinCount);
-        
-
 
         let sum1 = 0.0, sum2 = 0.0, sum3 = 0.0;
         for(let i = a; i < Math.min(buf.length, b); i++){
@@ -182,6 +202,29 @@ function startListening() {
         let avg1 = sum1 / ((Math.min(buf.length, b)-a)*1.0);
         let avg2 = sum2 / ((Math.min(buf.length, c)-b)*1.0);
         let avg3 = sum3 / ((Math.min(buf.length, d)-c)*1.0);
+
+        avg1 = median(buf, a, b);
+        avg2 = median(buf, b, c);
+        avg3 = median(buf, c, d);
+
+        function median(array, start, end) {
+            temp = new Array(end-start);
+
+            for(let i = 0; i < end-start; i++) {
+                temp[i] = array[i + start];
+            }
+
+            temp = temp.sort((a, b) => (a - b));
+
+            let middle = Math.floor(temp.length/2);
+            if(temp.length % 2 === 0) {
+                return (temp[middle]+temp[middle-1])/2;
+            }
+            else {
+                return temp[middle];
+            }
+        }
+
         //console.log(avg3);
         //console.log(avg);
 
@@ -196,12 +239,12 @@ function startListening() {
         mesh3.rotation.x -= 0.005;
         mesh3.rotation.y -= 0.005;
 
-        approx_min = -160;
-        approx_max = -70;
+        approx_min = -150;
+        approx_max = -60;
 
-        scaleish1 = 1.0*(avg1 - approx_min)/(approx_max - approx_min);
-        scaleish2 = 1.0*(avg2 - approx_min)/(approx_max - approx_min);
-        scaleish3 = 1.0*(avg3 - approx_min)/(approx_max - approx_min);
+        scaleish1 = 1.0*(Math.max(avg1 - approx_min,0))/(approx_max - approx_min);
+        scaleish2 = 1.0*(Math.max(avg2 - approx_min,0))/(approx_max - approx_min);
+        scaleish3 = 1.0*(Math.max(avg3 - approx_min,0))/(approx_max - approx_min);
 
         scale1 = 1 + 3.5*Math.max(Math.min(scaleish1, 1), 0);
         scale2 = 1 + 3.5*Math.max(Math.min(scaleish2, 1), 0);
@@ -221,7 +264,15 @@ function startListening() {
 
     }
 
-    let arr =  [25, 45, 60, 90];
+    function checkChangeColor(){
+
+    }
+
+    let arr =  [0, 45, 60, 219];
+    let count = 0;
+    const interval = setInterval(function() {
+        refreshBins();
+    }, 250);
     animate();
         
     });
