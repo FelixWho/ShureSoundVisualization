@@ -3,11 +3,11 @@ Dare Mighty Things Hackathon October 2019
 
 ## Team Members
 
-- AidanKelley
-- TimDSF
-- devilzhoukan
-- devYaoYH
-- FelixWho
+- AidanKelley (https://github.com/AidanKelley)
+- TimDSF (https://github.com/TimDSF)
+- devilzhoukan (https://github.com/devilzhoukan)
+- devYaoYH (https://github.com/devYaoYH)
+- FelixWho (https://github.com/FelixWho/)
 
 
 *Thanks everyone for a great time!*
