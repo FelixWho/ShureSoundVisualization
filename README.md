@@ -4,9 +4,14 @@ Dare Mighty Things Hackathon October 2019
 ## Team Members
 
 AidanKelley
+
 TimDSF
+
 devilzhoukan
+
 devYaoYH
+
+
 
 *Thanks everyone for a great time!*
 
